@@ -1,0 +1,11 @@
+[package]
+name = "common"
+version = "1.0.0"
+authors = ["Daanoz"]
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+async-trait = "0.1.68"
