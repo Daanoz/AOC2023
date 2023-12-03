@@ -1,0 +1,16 @@
+[package]
+name = "aoc2023-ui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-trait = "0.1.68"
+common = { path = "./../common" }
+eframe = "0.24.1"
+egui_extras = "0.24.1"
+aoc2023 = { path = "./../solutions", features = ["ui"] }
+env_logger = "0.10.1"
+regex = "1"
+tokio = { version = "1.28.1", features = ["rt", "rt-multi-thread", "macros"] }
+futures = "0.3.29"
+lazy_async_promise = "0.5.0"
