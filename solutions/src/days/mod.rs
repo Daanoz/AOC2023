@@ -26,7 +26,7 @@ mod day_23;
 mod day_24;
 mod day_25;
 
-pub fn get_day(day: u8) -> Result<Box<dyn Solution>, String> {
+pub fn get_day(day: u8) -> Result<Box<dyn Solution + Send>, String> {
     match day {
         1 => Ok(Box::<day_01::Puzzle>::default()),
         2 => Ok(Box::<day_02::Puzzle>::default()),
