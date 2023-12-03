@@ -8,4 +8,6 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
-async-trait = "0.1.68"
+
+[features]
+default = []

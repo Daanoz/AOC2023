@@ -1,4 +1,4 @@
-use common::Solution;
+use common::Answer;
 
 mod day_01;
 mod day_02;
@@ -25,6 +25,15 @@ mod day_22;
 mod day_23;
 mod day_24;
 mod day_25;
+
+#[async_trait::async_trait]
+pub trait Solution {
+    async fn solve_a(&mut self, input: String) -> Result<Answer, String>;
+    async fn solve_b(&mut self, input: String) -> Result<Answer, String>;
+
+    #[cfg(feature = "ui")]
+    async fn get_shapes(&mut self, input: String, rect: egui::Rect) -> Option<Vec<egui::Shape>>;
+}
 
 pub fn get_day(day: u8) -> Result<Box<dyn Solution + Send>, String> {
     match day {

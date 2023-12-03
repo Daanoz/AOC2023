@@ -1,7 +1,8 @@
 use std::{ops::Add, str::FromStr};
 
 use async_trait::async_trait;
-use common::{Answer, Solution};
+use common::Answer;
+use super::Solution;
 
 pub struct Puzzle {}
 
@@ -119,12 +120,18 @@ impl Solution for Puzzle {
         let games = parse_input(input);
         Answer::from(games.iter().map(|g| g.set_power()).sum::<u32>()).into()
     }
+
+    #[cfg(feature = "ui")]
+    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
+        None
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Puzzle;
-    use common::{Answer, Solution};
+    use common::Answer;
+use super::Solution;
 
     const TEST_INPUT: &str = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue

@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
+use super::Solution;
 use async_trait::async_trait;
-use common::{Answer, Solution};
+use common::Answer;
 
 pub struct Puzzle {}
 
@@ -100,17 +101,24 @@ fn parse_input(input: String) -> (HashMap<Coord, char>, Vec<Number>) {
     (symbols, numbers)
 }
 
+fn get_attached_numbers<'a>(
+    symbols: &HashMap<Coord, char>,
+    numbers: &'a Vec<Number>,
+) -> Vec<&'a Number> {
+    numbers
+        .iter()
+        .filter(|n| {
+            let neighbors = n.neighbor_coords();
+            neighbors.iter().any(|c| symbols.contains_key(c))
+        })
+        .collect()
+}
+
 #[async_trait]
 impl Solution for Puzzle {
     async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let (symbols, numbers) = parse_input(input);
-        let attached_numbers: Vec<&Number> = numbers
-            .iter()
-            .filter(|n| {
-                let neighbors = n.neighbor_coords();
-                neighbors.iter().any(|c| symbols.contains_key(c))
-            })
-            .collect();
+        let attached_numbers = get_attached_numbers(&symbols, &numbers);
         Answer::from(attached_numbers.iter().map(|n| n.value).sum::<u32>()).into()
     }
 
@@ -118,14 +126,12 @@ impl Solution for Puzzle {
         let (symbols, numbers) = parse_input(input);
         let gears: Vec<u32> = numbers
             .iter()
-            .filter_map(|n| 
-                n.neighbor_coords().iter().find(|c| 
-                    symbols
-                        .get(c)
-                        .filter(|s| s == &&'*')
-                        .is_some()
-                ).map(|c| (c.clone(), n))
-            )
+            .filter_map(|n| {
+                n.neighbor_coords()
+                    .iter()
+                    .find(|c| symbols.get(c).filter(|s| s == &&'*').is_some())
+                    .map(|c| (c.clone(), n))
+            })
             .fold(HashMap::new(), |mut map, (c, n)| {
                 map.entry(c).or_insert(vec![]).push(n);
                 map
@@ -136,12 +142,44 @@ impl Solution for Puzzle {
             .collect();
         Answer::from(gears.iter().sum::<u32>()).into()
     }
+
+    #[cfg(feature = "ui")]
+    async fn get_shapes(&mut self, input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
+        use egui::epaint::*;
+
+        let mut shapes = vec![];
+        let (symbols, numbers) = parse_input(input);
+        shapes.extend(symbols.iter().map(|(coord, _s)| {
+            Shape::Rect(RectShape::filled(
+                Rect::from_min_size(Pos2::new(coord.1 as f32, coord.0 as f32), Vec2::splat(1.0)),
+                Rounding::ZERO,
+                Color32::YELLOW,
+            ))
+        }));
+        shapes.extend(numbers.iter().map(|n| {
+            Shape::Rect(RectShape::filled(
+                Rect::from_min_size(Pos2::new(n.coord.1 as f32, n.coord.0 as f32), Vec2::new(n.digits as f32, 1.0)),
+                Rounding::ZERO,
+                Color32::BLUE,
+            ))
+        }));
+        let attached_numbers = get_attached_numbers(&symbols, &numbers);
+        shapes.extend(attached_numbers.iter().map(|n| {
+            Shape::Rect(RectShape::filled(
+                Rect::from_min_size(Pos2::new(n.coord.1 as f32, n.coord.0 as f32), Vec2::new(n.digits as f32, 1.0)),
+                Rounding::ZERO,
+                Color32::GREEN,
+            ))
+        }));
+        Some(shapes)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Puzzle;
-    use common::{Answer, Solution};
+    use super::Solution;
+    use common::Answer;
 
     const TEST_INPUT: &str = "467..114..
 ...*......

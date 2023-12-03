@@ -1,9 +1,3 @@
-#[async_trait::async_trait]
-pub trait Solution {
-    async fn solve_a(&mut self, input: String) -> Result<Answer, String>;
-    async fn solve_b(&mut self, input: String) -> Result<Answer, String>;
-}
-
 #[derive(Debug, PartialEq, Eq)]
 pub struct Answer {
     result: String,

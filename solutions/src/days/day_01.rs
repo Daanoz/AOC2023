@@ -1,5 +1,6 @@
 use async_trait::async_trait;
-use common::{Answer, Solution};
+use common::Answer;
+use super::Solution;
 
 pub struct Puzzle {}
 
@@ -61,12 +62,18 @@ impl Solution for Puzzle {
     async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
         Answer::from(read_str_numbers(input)).into()
     }
+
+    #[cfg(feature = "ui")]
+    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
+        None
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Puzzle;
-    use common::{Answer, Solution};
+    use common::Answer;
+use super::Solution;
 
     const TEST_INPUT_A: &str = "1abc2
 pqr3stu8vwx
