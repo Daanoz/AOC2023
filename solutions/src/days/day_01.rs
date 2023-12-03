@@ -2,11 +2,22 @@ use async_trait::async_trait;
 use common::Answer;
 use super::Solution;
 
-pub struct Puzzle {}
+#[derive(Default)]
+pub struct Puzzle;
 
-impl Default for Puzzle {
-    fn default() -> Self {
-        Self { }
+#[async_trait]
+impl Solution for Puzzle {
+    async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
+        Answer::from(read_numbers(input)).into()
+    }
+
+    async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
+        Answer::from(read_str_numbers(input)).into()
+    }
+
+    #[cfg(feature = "ui")]
+    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
+        None
     }
 }
 
@@ -50,22 +61,6 @@ fn str_as_digit(input: &str) -> u32 {
         "eight" => 8,
         "nine" => 9,
         _ => input.parse::<u32>().unwrap()
-    }
-}
-
-#[async_trait]
-impl Solution for Puzzle {
-    async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
-        Answer::from(read_numbers(input)).into()
-    }
-
-    async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
-        Answer::from(read_str_numbers(input)).into()
-    }
-
-    #[cfg(feature = "ui")]
-    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
-        None
     }
 }
 

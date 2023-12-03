@@ -4,11 +4,37 @@ use async_trait::async_trait;
 use common::Answer;
 use super::Solution;
 
-pub struct Puzzle {}
+#[derive(Default)]
+pub struct Puzzle;
 
-impl Default for Puzzle {
-    fn default() -> Self {
-        Self {}
+#[async_trait]
+impl Solution for Puzzle {
+    async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
+        let games = parse_input(input);
+        Answer::from(
+            games
+                .iter()
+                .filter(|g| {
+                    g.in_bounds(Set {
+                        red: 12,
+                        green: 13,
+                        blue: 14,
+                    })
+                })
+                .map(|g| g.id)
+                .sum::<u32>(),
+        )
+        .into()
+    }
+
+    async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
+        let games = parse_input(input);
+        Answer::from(games.iter().map(|g| g.set_power()).sum::<u32>()).into()
+    }
+
+    #[cfg(feature = "ui")]
+    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
+        None
     }
 }
 
@@ -28,7 +54,7 @@ impl FromStr for Game {
             .map(|set| {
                 set.split(", ")
                     .map(|item| {
-                        let (count, color) = item.split_once(" ").unwrap();
+                        let (count, color) = item.split_once(' ').unwrap();
                         let count: u32 = count.parse().unwrap();
                         match color {
                             "red" => Set {
@@ -94,37 +120,6 @@ fn parse_input(input: String) -> Vec<Game> {
         .lines()
         .map(|line| line.parse::<Game>().unwrap())
         .collect()
-}
-
-#[async_trait]
-impl Solution for Puzzle {
-    async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
-        let games = parse_input(input);
-        Answer::from(
-            games
-                .iter()
-                .filter(|g| {
-                    g.in_bounds(Set {
-                        red: 12,
-                        green: 13,
-                        blue: 14,
-                    })
-                })
-                .map(|g| g.id)
-                .sum::<u32>(),
-        )
-        .into()
-    }
-
-    async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
-        let games = parse_input(input);
-        Answer::from(games.iter().map(|g| g.set_power()).sum::<u32>()).into()
-    }
-
-    #[cfg(feature = "ui")]
-    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
-        None
-    }
 }
 
 #[cfg(test)]

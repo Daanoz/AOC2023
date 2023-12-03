@@ -8,9 +8,9 @@ impl Answer {
     }
 }
 
-impl Into<Result<Answer, String>> for Answer {
-    fn into(self) -> Result<Answer, String> {
-        Ok(self)
+impl From<Answer> for Result<Answer, String> {
+    fn from(val: Answer) -> Self {
+        Ok(val)
     }
 }
 

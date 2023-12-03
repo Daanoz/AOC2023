@@ -2,13 +2,8 @@ use async_trait::async_trait;
 use common::Answer;
 use super::Solution;
 
-pub struct Puzzle {}
-
-impl Default for Puzzle {
-    fn default() -> Self {
-        Self { }
-    }
-}
+#[derive(Default)]
+pub struct Puzzle;
 
 #[async_trait]
 impl Solution for Puzzle {
