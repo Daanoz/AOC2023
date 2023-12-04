@@ -12,7 +12,7 @@ pub trait PuzzleViewportUi {
 }
 
 type PuzzleAnswerPromise = ImmediateValuePromise<(Answer, Duration)>;
-type PuzzleShapesPromise = ImmediateValuePromise<Vec<egui::Shape>>;
+type PuzzleShapesPromise = ImmediateValuePromise<Vec<ui_support::Shape>>;
 
 #[derive(Debug)]
 struct PuzzleError(String);
@@ -29,6 +29,9 @@ pub struct PuzzleViewport {
     update_callback_ctx: Option<egui::Context>,
     part_a: Option<PuzzleAnswerPromise>,
     part_b: Option<PuzzleAnswerPromise>,
+
+    visualization_zoom: f32,
+    visualization_offset: emath::Vec2,
     shapes: Option<PuzzleShapesPromise>,
 }
 impl PuzzleViewport {
@@ -39,6 +42,9 @@ impl PuzzleViewport {
             update_callback_ctx: None,
             part_a: None,
             part_b: None,
+
+            visualization_zoom: 100.0,
+            visualization_offset: emath::Vec2::ZERO,
             shapes: None,
         }
     }
@@ -116,8 +122,13 @@ fn display_result(ui: &mut Ui, result: &mut Option<PuzzleAnswerPromise>) {
     }
 }
 
-fn display_shapes(painter: &egui::Painter, result: &mut Option<PuzzleShapesPromise>) {
-    use egui::*;
+fn display_shapes(
+    painter: &egui::Painter,
+    to_screen: emath::RectTransform,
+    result: &mut Option<PuzzleShapesPromise>,
+) {
+    use egui::{epaint::*, *};
+
     if let Some(state) = result {
         match state.poll_state() {
             lazy_async_promise::ImmediateValueState::Updating => {
@@ -130,7 +141,8 @@ fn display_shapes(painter: &egui::Painter, result: &mut Option<PuzzleShapesPromi
                 );
             }
             lazy_async_promise::ImmediateValueState::Success(shapes) => {
-                painter.extend(shapes.iter().cloned());
+                painter.extend(shapes.iter().cloned().map(|s| s.into_native(to_screen)));
+                shapes.iter().for_each(|s| s.paint(painter, to_screen));
             }
             lazy_async_promise::ImmediateValueState::Error(err) => {
                 painter.text(
@@ -167,12 +179,36 @@ impl PuzzleViewportUi for PuzzleViewport {
                 display_result(ui, &mut self.part_b);
             });
             ui.separator();
-            let button = ui.button("Try visualize");
-            let (_response, painter) = ui.allocate_painter(ui.available_size(), Sense::hover());
-            if button.clicked() {
-                self.shapes = Some(self.fetch_shapes(painter.clip_rect()));
-            }
-            display_shapes(&painter, &mut self.shapes);
+            let mut remaining_space = ui.available_size();
+            remaining_space.y = remaining_space.y - 18.0;
+            ui.horizontal(|ui| {
+                ui.set_height(18.0);
+                if ui.button("Try visualize").clicked() {
+                    self.visualization_offset = emath::Vec2::ZERO;
+                    self.shapes = Some(self.fetch_shapes(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        remaining_space,
+                    )));
+                }
+                ui.add(egui::Slider::new(&mut self.visualization_zoom, 25.0..=3000.0).suffix("%"));
+            });
+            ui.with_layout(egui::Layout::default(), |ui| {
+                let (response, painter) = ui.allocate_painter(ui.available_size(), Sense::drag());
+                self.visualization_offset += response.drag_delta();
+                let placement_rect = response.rect.translate(self.visualization_offset);
+                let scale = self.visualization_zoom / 100.0;
+                let from = egui::Rect::from_x_y_ranges(0.0..=1.0, 0.0..=1.0);
+                let to = egui::Rect::from_x_y_ranges(
+                    placement_rect.left()..=placement_rect.left() + scale,
+                    placement_rect.top()..=placement_rect.top() + scale,
+                );
+                let to_screen = emath::RectTransform::from_to(from, to);
+                display_shapes(
+                    &painter,
+                    to_screen,
+                    &mut self.shapes,
+                );
+            });
         });
     }
 }

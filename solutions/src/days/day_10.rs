@@ -16,7 +16,7 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
+    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
         None
     }
 }

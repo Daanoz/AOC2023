@@ -12,57 +12,65 @@ impl Solution for Puzzle {
     async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let (symbols, numbers) = parse_input(input);
         let attached_numbers = get_attached_numbers(&symbols, &numbers);
-        Answer::from(attached_numbers.iter().map(|n| n.value).sum::<u32>()).into()
+        Answer::from(attached_numbers.map(|n| n.value).sum::<u32>()).into()
     }
 
     async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
         let (symbols, numbers) = parse_input(input);
-        let gears: Vec<u32> = numbers
-            .iter()
-            .filter_map(|n| {
-                n.neighbor_coords()
-                    .iter()
-                    .find(|c| symbols.get(c).filter(|s| s == &&'*').is_some())
-                    .map(|c| (*c, n))
-            })
-            .fold(HashMap::new(), |mut map: HashMap<(usize, usize), Vec<&Number>>, (c, n)| {
-                map.entry(c).or_default().push(n);
-                map
-            })
-            .iter()
-            .filter(|(_, v)| v.len() == 2)
+        let gears: Vec<u32> = get_numbers_with_gears(&symbols, &numbers)
             .map(|(_, v)| (v.get(0).unwrap().value * v.get(1).unwrap().value))
             .collect();
         Answer::from(gears.iter().sum::<u32>()).into()
     }
 
     #[cfg(feature = "ui")]
-    async fn get_shapes(&mut self, input: String, _rect: egui::Rect) -> Option<Vec<egui::Shape>> {
+    async fn get_shapes(
+        &mut self,
+        input: String,
+        _rect: egui::Rect,
+    ) -> Option<Vec<ui_support::Shape>> {
         use egui::epaint::*;
 
         let mut shapes = vec![];
         let (symbols, numbers) = parse_input(input);
-        shapes.extend(symbols.keys().map(|coord| {
-            Shape::Rect(RectShape::filled(
-                Rect::from_min_size(Pos2::new(coord.1 as f32, coord.0 as f32), Vec2::splat(1.0)),
-                Rounding::ZERO,
+        shapes.extend(symbols.iter().enumerate().map(|(_, (coord, char))| {
+            ui_support::Shape::text(
+                Pos2::new(coord.1 as f32, coord.0 as f32),
+                char.to_string(),
+                1.0,
                 Color32::YELLOW,
-            ))
+            )
         }));
         shapes.extend(numbers.iter().map(|n| {
-            Shape::Rect(RectShape::filled(
-                Rect::from_min_size(Pos2::new(n.coord.1 as f32, n.coord.0 as f32), Vec2::new(n.digits as f32, 1.0)),
-                Rounding::ZERO,
+            ui_support::Shape::text(
+                Pos2::new(n.coord.1 as f32, n.coord.0 as f32),
+                n.value.to_string(),
+                1.0,
                 Color32::BLUE,
-            ))
+            )
         }));
-        let attached_numbers = get_attached_numbers(&symbols, &numbers);
-        shapes.extend(attached_numbers.iter().map(|n| {
-            Shape::Rect(RectShape::filled(
-                Rect::from_min_size(Pos2::new(n.coord.1 as f32, n.coord.0 as f32), Vec2::new(n.digits as f32, 1.0)),
-                Rounding::ZERO,
+        shapes.extend(get_attached_numbers(&symbols, &numbers).map(|n| {
+            ui_support::Shape::text(
+                Pos2::new(n.coord.1 as f32, n.coord.0 as f32),
+                n.value.to_string(),
+                1.0,
                 Color32::GREEN,
-            ))
+            )
+        }));
+        shapes.extend(get_numbers_with_gears(&symbols, &numbers).flat_map(|(gear, numbers)| {
+            let mut s: Vec<ui_support::Shape> = numbers.iter().map(|n| ui_support::Shape::text(
+                Pos2::new(n.coord.1 as f32, n.coord.0 as f32),
+                n.value.to_string(),
+                1.0,
+                Color32::RED,
+            )).collect();
+            s.push(ui_support::Shape::text(
+                Pos2::new(gear.1 as f32, gear.0 as f32),
+                "*".to_string(),
+                1.0,
+                Color32::RED,
+            ));
+            s
         }));
         Some(shapes)
     }
@@ -147,26 +155,45 @@ fn parse_input(input: String) -> (HashMap<Coord, char>, Vec<Number>) {
             if !cur.is_empty() {
                 list.push(cur);
             }
-            list
-                .into_iter()
-                .map(Number::new)
-                .collect::<Vec<Number>>()
+            list.into_iter().map(Number::new).collect::<Vec<Number>>()
         })
         .collect();
     (symbols, numbers)
 }
 
 fn get_attached_numbers<'a>(
-    symbols: &HashMap<Coord, char>,
+    symbols: &'a HashMap<Coord, char>,
     numbers: &'a [Number],
-) -> Vec<&'a Number> {
+) -> impl Iterator<Item = &'a Number> {
     numbers
         .iter()
         .filter(|n| {
             let neighbors = n.neighbor_coords();
             neighbors.iter().any(|c| symbols.contains_key(c))
         })
-        .collect()
+}
+
+fn get_numbers_with_gears<'a>(
+    symbols: &'a HashMap<Coord, char>,
+    numbers: &'a [Number],
+) -> impl Iterator<Item = (Coord, Vec<&'a Number>)> {
+    numbers
+        .iter()
+        .filter_map(|n| {
+            n.neighbor_coords()
+                .iter()
+                .find(|c| symbols.get(c).filter(|s| s == &&'*').is_some())
+                .map(|c| (*c, n))
+        })
+        .fold(
+            HashMap::new(),
+            |mut map: HashMap<(usize, usize), Vec<&Number>>, (c, n)| {
+                map.entry(c).or_default().push(n);
+                map
+            },
+        )
+        .into_iter()
+        .filter(|(_, v)| v.len() == 2)
 }
 
 #[cfg(test)]

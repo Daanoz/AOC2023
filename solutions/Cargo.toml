@@ -15,7 +15,8 @@ async-trait = "0.1.68"
 tokio = { version = "1.28.1", features = ["rt", "rt-multi-thread", "macros"] }
 
 egui = { version = "0.24.1", optional = true }
+ui-support = { path = "./../ui-support", optional = true  }
 
 [features]
 default = []
-ui = ["egui"]
+ui = ["egui", "ui-support"]

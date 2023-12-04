@@ -32,7 +32,7 @@ pub trait Solution {
     async fn solve_b(&mut self, input: String) -> Result<Answer, String>;
 
     #[cfg(feature = "ui")]
-    async fn get_shapes(&mut self, input: String, rect: egui::Rect) -> Option<Vec<egui::Shape>>;
+    async fn get_shapes(&mut self, input: String, rect: egui::Rect) -> Option<Vec<ui_support::Shape>>;
 }
 
 pub fn get_day(day: u8) -> Result<Box<dyn Solution + Send>, String> {

@@ -51,7 +51,7 @@ impl eframe::App for MyApp {
                         "AOC 2023 Puzzle Day {:02}",
                         viewport_puzzle.get_day()
                     ))
-                    .with_inner_size([400.0, 300.0]),
+                    .with_inner_size([500.0, 500.0]),
                 move |ctx, class| {
                     assert!(
                         class == egui::ViewportClass::Immediate,

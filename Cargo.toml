@@ -3,7 +3,8 @@ resolver = "2"
 members = [
   "common",
   "solutions",
-  "ui"
+  "ui",
+  "ui-support"
 ]
 default-members = [
   "solutions"
