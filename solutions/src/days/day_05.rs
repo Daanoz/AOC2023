@@ -11,30 +11,27 @@ pub struct Puzzle;
 impl Solution for Puzzle {
     async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let (seeds, maps) = parse_input(input);
-        let locations = seeds.into_iter().map(|s| {
-            let mut value = s;
-            for map in &maps {
-                value = map.convert(value);
-            }
-            value
-        });
+        let locations = seeds.into_iter().map(|s| convert(s, &maps));
         Answer::from(locations.min()).into()
     }
 
     async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
-        let (seeds, maps) = parse_input(input);
-        let locations = seeds
+        let (seeds, mut maps) = parse_input(input);
+        maps.reverse();
+        let seed_ranges = seeds
             .chunks(2)
             .into_iter()
-            .flat_map(|s| vec![0; s[1]].into_iter().enumerate().map(|(i, _)| s[0] + i))
-            .map(|s| {
-                let mut value = s;
-                for map in &maps {
-                    value = map.convert(value);
-                }
-                value
-            });
-        Answer::from(locations.min()).into()
+            .map(|s| s[0]..s[0]+s[1])
+            .collect::<Vec<Range<usize>>>();
+        let mut l = 1;
+        let min_loc = loop {
+            let seed = reverse(l, &maps);
+            if seed_ranges.iter().any(|r| r.contains(&seed)) {
+                break l;
+            }
+            l += 1;
+        };
+        Answer::from(min_loc).into()
     }
 
     #[cfg(feature = "ui")]
@@ -63,6 +60,21 @@ fn parse_input(input: String) -> (Vec<usize>, Vec<ConversionMap>) {
     (seeds, maps)
 }
 
+fn convert(value: usize, maps: &[ConversionMap]) -> usize {
+    let mut value = value;
+    for map in maps {
+        value = map.convert(value);
+    }
+    value
+}
+fn reverse(value: usize, maps: &[ConversionMap]) -> usize {
+    let mut value = value;
+    for map in maps {
+        value = map.reverse(value);
+    }
+    value
+}
+
 #[derive(Debug)]
 struct ConversionMap {
     #[allow(dead_code)]
@@ -72,7 +84,13 @@ struct ConversionMap {
 impl ConversionMap {
     fn convert(&self, value: usize) -> usize {
         match self.ranges.iter().find(|r| r.from.contains(&value)) {
-            Some(range) => range.to + (value - range.from.start),
+            Some(range) => range.to.start + (value - range.from.start),
+            None => value,
+        }
+    }
+    fn reverse(&self, value: usize) -> usize {
+        match self.ranges.iter().find(|r| r.to.contains(&value)) {
+            Some(range) => range.from.start + (value - range.to.start),
             None => value,
         }
     }
@@ -96,7 +114,7 @@ impl FromStr for ConversionMap {
 #[derive(Debug)]
 struct ConversionRange {
     from: Range<usize>,
-    to: usize,
+    to: Range<usize>,
 }
 impl FromStr for ConversionRange {
     type Err = String;
@@ -108,7 +126,7 @@ impl FromStr for ConversionRange {
             .collect();
         Ok(Self {
             from: lines[1]..lines[1] + lines[2],
-            to: lines[0],
+            to: lines[0]..lines[0] + lines[2],
         })
     }
 }
