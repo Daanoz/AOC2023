@@ -101,9 +101,10 @@ impl FromStr for ConversionMap {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut lines = s.lines();
         let name = lines.next().ok_or("Missing line")?;
-        let ranges = lines
+        let mut ranges: Vec<ConversionRange> = lines
             .map(|r| r.parse::<ConversionRange>().unwrap())
             .collect();
+        ranges.sort_by(|a, b| a.to.start.cmp(&b.to.start));
         Ok(Self {
             name: name.into(),
             ranges,
