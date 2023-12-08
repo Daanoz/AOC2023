@@ -1,4 +1,5 @@
 use eframe::egui::{self, Sense, Ui};
+use emath::Pos2;
 use lazy_async_promise::ImmediateValuePromise;
 use std::{error::Error, fmt::Display, sync::Arc, time::Duration};
 
@@ -12,7 +13,7 @@ pub trait PuzzleViewportUi {
 }
 
 type PuzzleAnswerPromise = ImmediateValuePromise<(Answer, Duration)>;
-type PuzzleShapesPromise = ImmediateValuePromise<Vec<ui_support::Shape>>;
+type PuzzleShapesPromise = ImmediateValuePromise<(Vec<ui_support::Shape>, f32)>;
 
 #[derive(Debug)]
 struct PuzzleError(String);
@@ -71,7 +72,6 @@ impl PuzzleViewport {
             } else {
                 solution.solve_a(input)
             }
-            .await
             .map_err(PuzzleError)?;
             let time = start.elapsed();
             update_callback();
@@ -80,7 +80,7 @@ impl PuzzleViewport {
         ImmediateValuePromise::new(updater)
     }
 
-    fn fetch_shapes(&mut self, rect: egui::Rect) -> PuzzleShapesPromise {
+    fn fetch_shapes(&mut self, render_rect: egui::Rect) -> PuzzleShapesPromise {
         let day = self.day;
         let update_callback = self.update_callback();
         let puzzle = Arc::clone(&self.puzzle);
@@ -88,11 +88,13 @@ impl PuzzleViewport {
             let input = aoc2023::get_input(day, None).await.map_err(PuzzleError)?;
             let mut solution = puzzle.lock().await;
             let shapes = solution
-                .get_shapes(input, rect)
-                .await
+                .get_shapes(input, render_rect)
                 .ok_or(PuzzleError("No visualization available".into()))?;
+            let min_size = egui::Rect::from_two_pos(Pos2::new(0.0, 0.0), Pos2::new(100.0, 100.0));
+            let size = shapes.iter().fold(min_size, |sum, r| sum.union(r.rect()));
+            let suggested_zoom = (render_rect.width() - size.width()) * 100.0;
             update_callback();
-            Ok(shapes)
+            Ok((shapes, suggested_zoom))
         };
         ImmediateValuePromise::new(updater)
     }
@@ -140,7 +142,7 @@ fn display_shapes(
                     Color32::WHITE,
                 );
             }
-            lazy_async_promise::ImmediateValueState::Success(shapes) => {
+            lazy_async_promise::ImmediateValueState::Success((shapes, suggested_zoom)) => {
                 painter.extend(shapes.iter().cloned().map(|s| s.into_native(to_screen)));
                 shapes.iter().for_each(|s| s.paint(painter, to_screen));
             }
@@ -203,11 +205,7 @@ impl PuzzleViewportUi for PuzzleViewport {
                     placement_rect.top()..=placement_rect.top() + scale,
                 );
                 let to_screen = emath::RectTransform::from_to(from, to);
-                display_shapes(
-                    &painter,
-                    to_screen,
-                    &mut self.shapes,
-                );
+                display_shapes(&painter, to_screen, &mut self.shapes);
             });
         });
     }

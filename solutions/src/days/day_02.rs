@@ -1,15 +1,13 @@
 use std::{ops::Add, str::FromStr};
 
-use async_trait::async_trait;
-use common::Answer;
 use super::Solution;
+use common::Answer;
 
 #[derive(Default)]
 pub struct Puzzle;
 
-#[async_trait]
 impl Solution for Puzzle {
-    async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
+    fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let games = parse_input(input);
         Answer::from(
             games
@@ -27,13 +25,13 @@ impl Solution for Puzzle {
         .into()
     }
 
-    async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
+    fn solve_b(&mut self, input: String) -> Result<Answer, String> {
         let games = parse_input(input);
         Answer::from(games.iter().map(|g| g.set_power()).sum::<u32>()).into()
     }
 
     #[cfg(feature = "ui")]
-    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
+    fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
         None
     }
 }
@@ -125,8 +123,8 @@ fn parse_input(input: String) -> Vec<Game> {
 #[cfg(test)]
 mod tests {
     use super::Puzzle;
+    use super::Solution;
     use common::Answer;
-use super::Solution;
 
     const TEST_INPUT: &str = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
@@ -138,7 +136,7 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
     async fn part_a() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_a(String::from(TEST_INPUT)).await,
+            puzzle.solve_a(String::from(TEST_INPUT)),
             Ok(Answer::from(8))
         )
     }
@@ -147,7 +145,7 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
     async fn part_b() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_b(String::from(TEST_INPUT)).await,
+            puzzle.solve_b(String::from(TEST_INPUT)),
             Ok(Answer::from(2286))
         )
     }

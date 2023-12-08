@@ -1,21 +1,19 @@
 use std::collections::HashMap;
 
 use super::Solution;
-use async_trait::async_trait;
 use common::Answer;
 
 #[derive(Default)]
 pub struct Puzzle;
 
-#[async_trait]
 impl Solution for Puzzle {
-    async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
+    fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let (symbols, numbers) = parse_input(input);
         let attached_numbers = get_attached_numbers(&symbols, &numbers);
         Answer::from(attached_numbers.map(|n| n.value).sum::<u32>()).into()
     }
 
-    async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
+    fn solve_b(&mut self, input: String) -> Result<Answer, String> {
         let (symbols, numbers) = parse_input(input);
         let gears: Vec<u32> = get_numbers_with_gears(&symbols, &numbers)
             .map(|(_, v)| (v.get(0).unwrap().value * v.get(1).unwrap().value))
@@ -24,11 +22,7 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    async fn get_shapes(
-        &mut self,
-        input: String,
-        _rect: egui::Rect,
-    ) -> Option<Vec<ui_support::Shape>> {
+    fn get_shapes(&mut self, input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
         use egui::epaint::*;
 
         let mut shapes = vec![];
@@ -57,21 +51,28 @@ impl Solution for Puzzle {
                 Color32::GREEN,
             )
         }));
-        shapes.extend(get_numbers_with_gears(&symbols, &numbers).flat_map(|(gear, numbers)| {
-            let mut s: Vec<ui_support::Shape> = numbers.iter().map(|n| ui_support::Shape::text(
-                Pos2::new(n.coord.1 as f32, n.coord.0 as f32),
-                n.value.to_string(),
-                1.0,
-                Color32::RED,
-            )).collect();
-            s.push(ui_support::Shape::text(
-                Pos2::new(gear.1 as f32, gear.0 as f32),
-                "*".to_string(),
-                1.0,
-                Color32::RED,
-            ));
-            s
-        }));
+        shapes.extend(
+            get_numbers_with_gears(&symbols, &numbers).flat_map(|(gear, numbers)| {
+                let mut s: Vec<ui_support::Shape> = numbers
+                    .iter()
+                    .map(|n| {
+                        ui_support::Shape::text(
+                            Pos2::new(n.coord.1 as f32, n.coord.0 as f32),
+                            n.value.to_string(),
+                            1.0,
+                            Color32::RED,
+                        )
+                    })
+                    .collect();
+                s.push(ui_support::Shape::text(
+                    Pos2::new(gear.1 as f32, gear.0 as f32),
+                    "*".to_string(),
+                    1.0,
+                    Color32::RED,
+                ));
+                s
+            }),
+        );
         Some(shapes)
     }
 }
@@ -165,12 +166,10 @@ fn get_attached_numbers<'a>(
     symbols: &'a HashMap<Coord, char>,
     numbers: &'a [Number],
 ) -> impl Iterator<Item = &'a Number> {
-    numbers
-        .iter()
-        .filter(|n| {
-            let neighbors = n.neighbor_coords();
-            neighbors.iter().any(|c| symbols.contains_key(c))
-        })
+    numbers.iter().filter(|n| {
+        let neighbors = n.neighbor_coords();
+        neighbors.iter().any(|c| symbols.contains_key(c))
+    })
 }
 
 fn get_numbers_with_gears<'a>(
@@ -217,7 +216,7 @@ mod tests {
     async fn part_a() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_a(String::from(TEST_INPUT)).await,
+            puzzle.solve_a(String::from(TEST_INPUT)),
             Ok(Answer::from(4361))
         )
     }
@@ -226,7 +225,7 @@ mod tests {
     async fn part_b() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_b(String::from(TEST_INPUT)).await,
+            puzzle.solve_b(String::from(TEST_INPUT)),
             Ok(Answer::from(467835))
         )
     }

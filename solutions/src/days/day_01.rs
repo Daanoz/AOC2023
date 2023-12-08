@@ -1,22 +1,20 @@
-use async_trait::async_trait;
-use common::Answer;
 use super::Solution;
+use common::Answer;
 
 #[derive(Default)]
 pub struct Puzzle;
 
-#[async_trait]
 impl Solution for Puzzle {
-    async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
+    fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         Answer::from(read_numbers(input)).into()
     }
 
-    async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
+    fn solve_b(&mut self, input: String) -> Result<Answer, String> {
         Answer::from(read_str_numbers(input)).into()
     }
 
     #[cfg(feature = "ui")]
-    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
+    fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
         None
     }
 }
@@ -26,17 +24,17 @@ fn read_numbers(input: String) -> u32 {
         .trim()
         .lines()
         .map(|line| {
-            let digits: Vec<u32> = line.chars()
-                .filter_map(|c| c.to_digit(10))
-                .collect();
+            let digits: Vec<u32> = line.chars().filter_map(|c| c.to_digit(10)).collect();
             digits.first().unwrap() * 10 + digits.last().unwrap()
         })
         .sum()
 }
 
 fn read_str_numbers(input: String) -> u32 {
-    let start_regex = regex::Regex::new(r"^.*?(one|two|three|four|five|six|seven|eight|nine|[0-9])").unwrap();
-    let end_regex = regex::Regex::new(r".*(one|two|three|four|five|six|seven|eight|nine|[0-9]).*?$").unwrap();
+    let start_regex =
+        regex::Regex::new(r"^.*?(one|two|three|four|five|six|seven|eight|nine|[0-9])").unwrap();
+    let end_regex =
+        regex::Regex::new(r".*(one|two|three|four|five|six|seven|eight|nine|[0-9]).*?$").unwrap();
 
     input
         .trim()
@@ -60,15 +58,15 @@ fn str_as_digit(input: &str) -> u32 {
         "seven" => 7,
         "eight" => 8,
         "nine" => 9,
-        _ => input.parse::<u32>().unwrap()
+        _ => input.parse::<u32>().unwrap(),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::Puzzle;
+    use super::Solution;
     use common::Answer;
-use super::Solution;
 
     const TEST_INPUT_A: &str = "1abc2
 pqr3stu8vwx
@@ -86,7 +84,7 @@ zoneight234
     async fn part_a() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_a(String::from(TEST_INPUT_A)).await,
+            puzzle.solve_a(String::from(TEST_INPUT_A)),
             Ok(Answer::from(142))
         )
     }
@@ -95,7 +93,7 @@ zoneight234
     async fn part_b() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_b(String::from(TEST_INPUT_B)).await,
+            puzzle.solve_b(String::from(TEST_INPUT_B)),
             Ok(Answer::from(281))
         )
     }

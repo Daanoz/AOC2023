@@ -1,20 +1,18 @@
 use std::{collections::HashMap, str::FromStr};
 
-use async_trait::async_trait;
-use common::Answer;
 use super::Solution;
+use common::Answer;
 
 #[derive(Default)]
 pub struct Puzzle;
 
-#[async_trait]
 impl Solution for Puzzle {
-    async fn solve_a(&mut self, _input: String) -> Result<Answer, String> {
+    fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let (instructions, nodes) = parse_input(input);
-        Answer::from(calculate_steps(&instructions, &nodes, "AAA".into(), 0)).into()
+        Answer::from(calculate_steps(&instructions, &nodes, "AAA", 0)).into()
     }
 
-    async fn solve_b(&mut self, _input: String) -> Result<Answer, String> {
+    fn solve_b(&mut self, input: String) -> Result<Answer, String> {
         let (instructions, nodes) = parse_input(input);
         let start: Vec<&Node> = nodes
             .iter()
@@ -25,7 +23,7 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    async fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
+    fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
         None
     }
 }
@@ -53,8 +51,8 @@ fn calculate_steps(
     let direction = instructions.get(steps % instructions.len()).unwrap();
     let node = nodes.get(location).unwrap();
     match direction {
-        Direction::Left => calculate_steps(instructions, &nodes, &node.left, steps + 1),
-        Direction::Right => calculate_steps(instructions, &nodes, &node.right, steps + 1),
+        Direction::Left => calculate_steps(instructions, nodes, &node.left, steps + 1),
+        Direction::Right => calculate_steps(instructions, nodes, &node.right, steps + 1),
     }
 }
 
@@ -71,13 +69,13 @@ fn calculate_ghost_steps(
     match direction {
         Direction::Left => calculate_ghost_steps(
             instructions,
-            &nodes,
+            nodes,
             nodes.get(&location.left).unwrap(),
             steps + 1,
         ),
         Direction::Right => calculate_ghost_steps(
             instructions,
-            &nodes,
+            nodes,
             nodes.get(&location.right).unwrap(),
             steps + 1,
         ),
@@ -90,7 +88,7 @@ fn calculate_smart_ghost_steps(
     location: Vec<&Node>,
     steps: usize,
 ) -> usize {
-    let steps = location
+    location
         .iter()
         .map(|n| calculate_ghost_steps(instructions, nodes, n, steps))
         .fold(0, |prev, current| {
@@ -99,8 +97,7 @@ fn calculate_smart_ghost_steps(
             } else {
                 get_lcm((prev, current))
             }
-        });
-    return steps;
+        })
 }
 
 /// Calculate the least common multiple of two numbers.
@@ -117,9 +114,13 @@ pub fn get_gcd((mut left, mut right): (usize, usize)) -> usize {
         std::mem::swap(&mut left, &mut right);
     }
     loop {
-        if right == 0 { return left; }
+        if right == 0 {
+            return left;
+        }
         left %= right;
-        if left == 0 { return right; }
+        if left == 0 {
+            return right;
+        }
         right %= left;
     }
 }
@@ -157,8 +158,8 @@ impl FromStr for Node {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (name, children) = s.split_once(" = (").unwrap();
         let (left, right) = children.trim_end_matches(')').split_once(", ").unwrap();
-        let is_start = name.ends_with("A");
-        let is_end = name.ends_with("Z");
+        let is_start = name.ends_with('A');
+        let is_end = name.ends_with('Z');
         Ok(Node {
             name: name.to_string(),
             left: left.to_string(),
@@ -206,8 +207,12 @@ XXX = (XXX, XXX)";
     async fn part_a() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_a(String::from(TEST_INPUT)).await,
+            puzzle.solve_a(String::from(TEST_INPUT)),
             Ok(Answer::from(2))
+        );
+        assert_eq!(
+            puzzle.solve_a(String::from(TEST_INPUT2)),
+            Ok(Answer::from(6))
         );
     }
 
@@ -215,7 +220,7 @@ XXX = (XXX, XXX)";
     async fn part_b() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_b(String::from(TEST_INPUT)).await,
+            puzzle.solve_b(String::from(TEST_INPUT3)),
             Ok(Answer::from(6))
         )
     }

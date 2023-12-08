@@ -20,7 +20,7 @@ struct Args {
     day: Option<u8>,
     // Run all days
     #[arg(short, long, action = ArgAction::SetTrue)]
-    all: bool
+    all: bool,
 }
 
 #[tokio::main]
@@ -38,23 +38,22 @@ async fn main() {
         }
         println!("Total time: {:.2?}", total_duration);
     }
-
 }
 
 async fn execute_day(day: u8, aoc_session: Option<String>) -> Duration {
     let mut solution = match days::get_day(day) {
         Ok(solution) => solution,
-        Err(_) => return Duration::ZERO
+        Err(_) => return Duration::ZERO,
     };
-    
-    let input = get_input(day, aoc_session).await.unwrap();
-    
-    let start = std::time::Instant::now();
 
-    let result_a = solution.solve_a(input.clone()).await;
+    let input_a = get_input(day, aoc_session).await.unwrap();
+    let input_b = input_a.clone();
+
+    let start = std::time::Instant::now();
+    let result_a = solution.solve_a(input_a);
     let time_a = start.elapsed();
     let start_b = std::time::Instant::now();
-    let result_b = solution.solve_b(input.clone()).await;
+    let result_b = solution.solve_b(input_b);
     let time_b = start_b.elapsed();
     let time = start.elapsed();
 
@@ -67,6 +66,9 @@ async fn execute_day(day: u8, aoc_session: Option<String>) -> Duration {
         Err(error) => println!("Day {}, Part B failed! {}", day, error),
     }
 
-    println!("Day {} time: {:.2?} (A: {:.2?}, B: {:.2?})", day, time, time_a, time_b);
+    println!(
+        "Day {} time: {:.2?} (A: {:.2?}, B: {:.2?})",
+        day, time, time_a, time_b
+    );
     time
 }

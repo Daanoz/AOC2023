@@ -1,26 +1,23 @@
 use std::{ops::Range, str::FromStr};
 
 use super::Solution;
-use async_trait::async_trait;
 use common::Answer;
 
 #[derive(Default)]
 pub struct Puzzle;
 
-#[async_trait]
 impl Solution for Puzzle {
-    async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
+    fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let (seeds, maps) = parse_input(input);
         let locations = seeds.into_iter().map(|s| convert(s, &maps));
         let min_loc: Option<usize> = locations.min();
         Answer::from(min_loc).into()
     }
 
-    async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
+    fn solve_b(&mut self, input: String) -> Result<Answer, String> {
         let (seeds, maps) = parse_input(input);
         let seed_ranges = seeds
             .chunks(2)
-            .into_iter()
             .map(|s| s[0]..s[0] + s[1])
             .collect::<Vec<Range<usize>>>();
         let min_loc = seed_ranges
@@ -32,11 +29,7 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    async fn get_shapes(
-        &mut self,
-        _input: String,
-        _rect: egui::Rect,
-    ) -> Option<Vec<ui_support::Shape>> {
+    fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
         None
     }
 }
@@ -111,12 +104,13 @@ impl ConversionMap {
                 let start_delta = start_in_range - r.from.start;
                 let range_size = (r.to.len() - start_delta).min(value_range.len()); // get smallest range
                 if range_size > 0 {
-                    let converted_range = (r.to.start + start_delta)..(r.to.start + start_delta + range_size) as usize; // in bounds, add converted value
+                    let converted_range = (r.to.start + start_delta)
+                        ..(r.to.start + start_delta + range_size); // in bounds, add converted value
                     next_seed_ranges.push(converted_range);
                     value_range.start += range_size;
                 }
             });
-        if value_range.len() > 0 {
+        if !value_range.is_empty() {
             next_seed_ranges.push(value_range); // add remaining out of bounds, retain value
         }
         next_seed_ranges
@@ -210,7 +204,7 @@ humidity-to-location map:
     async fn part_a() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_a(String::from(TEST_INPUT)).await,
+            puzzle.solve_a(String::from(TEST_INPUT)),
             Ok(Answer::from(35))
         )
     }
@@ -219,7 +213,7 @@ humidity-to-location map:
     async fn part_b() {
         let mut puzzle = Puzzle::default();
         assert_eq!(
-            puzzle.solve_b(String::from(TEST_INPUT)).await,
+            puzzle.solve_b(String::from(TEST_INPUT)),
             Ok(Answer::from(46))
         )
     }

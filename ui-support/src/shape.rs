@@ -7,10 +7,7 @@ pub enum Shape {
 }
 
 impl Shape {
-    pub fn into_native(
-        self,
-        to_screen: emath::RectTransform,
-    ) -> EShape {
+    pub fn into_native(self, to_screen: emath::RectTransform) -> EShape {
         match self {
             Self::Native(shape) => match shape {
                 EShape::Rect(r) => EShape::Rect(RectShape {
@@ -19,16 +16,11 @@ impl Shape {
                 }),
                 _ => panic!("Unsupported shape type"),
             },
-            Self::Text(_) => {
-                EShape::Noop
-            }
+            Self::Text(_) => EShape::Noop,
         }
     }
-    pub fn paint(
-        &self,
-        painter: &egui::Painter,
-        to_screen: emath::RectTransform,
-    ) -> () {
+
+    pub fn paint(&self, painter: &egui::Painter, to_screen: emath::RectTransform) -> () {
         match self {
             Self::Native(_) => (),
             Self::Text(text) => {
@@ -45,6 +37,18 @@ impl Shape {
                         text.color,
                     );
                 }
+            }
+        }
+    }
+
+    pub fn rect(&self) -> Rect {
+        match self {
+            Self::Native(shape) => shape.visual_bounding_rect(),
+            Self::Text(text) => {
+                let size = text.size;
+                let width = size * text.text.len() as f32;
+                let height = size;
+                Rect::from_min_max(text.pos, text.pos + vec2(width, height))
             }
         }
     }
