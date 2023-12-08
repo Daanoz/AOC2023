@@ -1,5 +1,5 @@
 use eframe::egui::{self, Sense, Ui};
-use emath::Pos2;
+use emath::{Pos2, Vec2};
 use lazy_async_promise::ImmediateValuePromise;
 use std::{error::Error, fmt::Display, sync::Arc, time::Duration};
 
@@ -13,7 +13,8 @@ pub trait PuzzleViewportUi {
 }
 
 type PuzzleAnswerPromise = ImmediateValuePromise<(Answer, Duration)>;
-type PuzzleShapesPromise = ImmediateValuePromise<(Vec<ui_support::Shape>, f32)>;
+type ShapesData = (Vec<ui_support::Shape>, Vec2);
+type PuzzleShapesPromise = ImmediateValuePromise<ShapesData>;
 
 #[derive(Debug)]
 struct PuzzleError(String);
@@ -31,7 +32,7 @@ pub struct PuzzleViewport {
     part_a: Option<PuzzleAnswerPromise>,
     part_b: Option<PuzzleAnswerPromise>,
 
-    visualization_zoom: f32,
+    visualization_zoom: Option<f64>,
     visualization_offset: emath::Vec2,
     shapes: Option<PuzzleShapesPromise>,
 }
@@ -44,7 +45,7 @@ impl PuzzleViewport {
             part_a: None,
             part_b: None,
 
-            visualization_zoom: 100.0,
+            visualization_zoom: None,
             visualization_offset: emath::Vec2::ZERO,
             shapes: None,
         }
@@ -91,12 +92,32 @@ impl PuzzleViewport {
                 .get_shapes(input, render_rect)
                 .ok_or(PuzzleError("No visualization available".into()))?;
             let min_size = egui::Rect::from_two_pos(Pos2::new(0.0, 0.0), Pos2::new(100.0, 100.0));
-            let size = shapes.iter().fold(min_size, |sum, r| sum.union(r.rect()));
-            let suggested_zoom = (render_rect.width() - size.width()) * 100.0;
+            let size: emath::Rect = shapes.iter().fold(min_size, |sum, r| sum.union(r.rect()));
+
             update_callback();
-            Ok((shapes, suggested_zoom))
+            Ok((shapes, size.size()))
         };
         ImmediateValuePromise::new(updater)
+    }
+
+    fn display_shapes(&mut self, ui: &mut Ui) {
+        if let Some(state) = self.shapes.as_mut() {
+            match state.poll_state() {
+                lazy_async_promise::ImmediateValueState::Updating => {
+                    ui.horizontal(|ui| {
+                        ui.spinner();
+                        ui.label("Retrieving draw data...");
+                    });
+                }
+                lazy_async_promise::ImmediateValueState::Success(shape_data) => {
+                    render_shapes(ui, self.visualization_zoom, shape_data);
+                }
+                lazy_async_promise::ImmediateValueState::Error(err) => {
+                    ui.label(err.to_string());
+                }
+                lazy_async_promise::ImmediateValueState::Empty => {}
+            };
+        }
     }
 }
 
@@ -124,40 +145,26 @@ fn display_result(ui: &mut Ui, result: &mut Option<PuzzleAnswerPromise>) {
     }
 }
 
-fn display_shapes(
-    painter: &egui::Painter,
-    to_screen: emath::RectTransform,
-    result: &mut Option<PuzzleShapesPromise>,
-) {
+fn render_shapes(ui: &mut Ui, zoom: Option<f64>, (shapes, shapes_size): &ShapesData) {
     use egui::{epaint::*, *};
+    let base_scale = ui.available_size().x / shapes_size.x;
+    let scale = if let Some(zoom) = zoom {
+        base_scale * (zoom / 100.0) as f32
+    } else {
+        base_scale
+    };
+    let shapes_size = *shapes_size * scale;
+    let (response, painter) = ui.allocate_painter(shapes_size, Sense::focusable_noninteractive());
+    let placement_rect = response.rect;
+    let from = egui::Rect::from_x_y_ranges(0.0..=1.0, 0.0..=1.0);
+    let to = egui::Rect::from_x_y_ranges(
+        placement_rect.left()..=placement_rect.left() + scale,
+        placement_rect.top()..=placement_rect.top() + scale,
+    );
+    let to_screen = emath::RectTransform::from_to(from, to);
 
-    if let Some(state) = result {
-        match state.poll_state() {
-            lazy_async_promise::ImmediateValueState::Updating => {
-                painter.text(
-                    painter.clip_rect().center(),
-                    Align2::CENTER_CENTER,
-                    "Fetching data...",
-                    FontId::proportional(20.0),
-                    Color32::WHITE,
-                );
-            }
-            lazy_async_promise::ImmediateValueState::Success((shapes, suggested_zoom)) => {
-                painter.extend(shapes.iter().cloned().map(|s| s.into_native(to_screen)));
-                shapes.iter().for_each(|s| s.paint(painter, to_screen));
-            }
-            lazy_async_promise::ImmediateValueState::Error(err) => {
-                painter.text(
-                    painter.clip_rect().center(),
-                    Align2::CENTER_CENTER,
-                    err.to_string(),
-                    FontId::proportional(20.0),
-                    Color32::RED,
-                );
-            }
-            lazy_async_promise::ImmediateValueState::Empty => {}
-        };
-    }
+    painter.extend(shapes.iter().cloned().map(|s| s.into_native(to_screen)));
+    shapes.iter().for_each(|s| s.paint(&painter, to_screen));
 }
 
 impl PuzzleViewportUi for PuzzleViewport {
@@ -186,27 +193,22 @@ impl PuzzleViewportUi for PuzzleViewport {
             ui.horizontal(|ui| {
                 ui.set_height(18.0);
                 if ui.button("Try visualize").clicked() {
-                    self.visualization_offset = emath::Vec2::ZERO;
+                    self.visualization_zoom = None;
                     self.shapes = Some(self.fetch_shapes(egui::Rect::from_min_size(
                         egui::Pos2::ZERO,
                         remaining_space,
                     )));
                 }
-                ui.add(egui::Slider::new(&mut self.visualization_zoom, 25.0..=3000.0).suffix("%"));
+                ui.add(egui::Slider::from_get_set( 25.0..=3000.0, |val| {
+                    if val.is_some() {
+                        self.visualization_zoom = val;
+                    }
+                    self.visualization_zoom.unwrap_or(100.0)
+                }).suffix("%"));
             });
-            ui.with_layout(egui::Layout::default(), |ui| {
-                let (response, painter) = ui.allocate_painter(ui.available_size(), Sense::drag());
-                self.visualization_offset += response.drag_delta();
-                let placement_rect = response.rect.translate(self.visualization_offset);
-                let scale = self.visualization_zoom / 100.0;
-                let from = egui::Rect::from_x_y_ranges(0.0..=1.0, 0.0..=1.0);
-                let to = egui::Rect::from_x_y_ranges(
-                    placement_rect.left()..=placement_rect.left() + scale,
-                    placement_rect.top()..=placement_rect.top() + scale,
-                );
-                let to_screen = emath::RectTransform::from_to(from, to);
-                display_shapes(&painter, to_screen, &mut self.shapes);
-            });
+            egui::ScrollArea::both()
+                .drag_to_scroll(true)
+                .show(ui, |ui: &mut Ui| self.display_shapes(ui));
         });
     }
 }
