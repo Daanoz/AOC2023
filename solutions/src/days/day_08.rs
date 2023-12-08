@@ -9,7 +9,7 @@ pub struct Puzzle;
 impl Solution for Puzzle {
     fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let (instructions, nodes) = parse_input(input);
-        Answer::from(calculate_steps(&instructions, &nodes, "AAA", 0)).into()
+        Answer::from(calculate_steps(&instructions, &nodes)).into()
     }
 
     fn solve_b(&mut self, input: String) -> Result<Answer, String> {
@@ -19,7 +19,7 @@ impl Solution for Puzzle {
             .filter(|(_, n)| n.is_start)
             .map(|(_, node)| node)
             .collect();
-        Answer::from(calculate_smart_ghost_steps(&instructions, &nodes, start, 0)).into()
+        Answer::from(calculate_smart_ghost_steps(&instructions, &nodes, start)).into()
     }
 
     #[cfg(feature = "ui")]
@@ -41,56 +41,51 @@ fn parse_input(input: String) -> (Vec<Direction>, HashMap<String, Node>) {
 
 fn calculate_steps(
     instructions: &Vec<Direction>,
-    nodes: &HashMap<String, Node>,
-    location: &str,
-    steps: usize,
+    nodes: &HashMap<String, Node>
 ) -> usize {
-    if location == "ZZZ" {
-        return steps;
-    }
-    let direction = instructions.get(steps % instructions.len()).unwrap();
-    let node = nodes.get(location).unwrap();
-    match direction {
-        Direction::Left => calculate_steps(instructions, nodes, &node.left, steps + 1),
-        Direction::Right => calculate_steps(instructions, nodes, &node.right, steps + 1),
+    let mut location = "AAA";
+    let mut steps = 0_usize;
+    loop {
+        if location == "ZZZ" {
+            return steps;
+        }
+        let direction = instructions.get(steps % instructions.len()).unwrap();
+        let node = nodes.get(location).unwrap();
+        location = match direction {
+            Direction::Left => &node.left,
+            Direction::Right => &node.right,
+        };
+        steps += 1;
     }
 }
 
-fn calculate_ghost_steps(
-    instructions: &Vec<Direction>,
-    nodes: &HashMap<String, Node>,
-    location: &Node,
-    steps: usize,
+fn calculate_ghost_steps<'a>(
+    instructions: &'a Vec<Direction>,
+    nodes: &'a HashMap<String, Node>,
+    mut location: &'a Node
 ) -> usize {
-    if location.is_end {
-        return steps;
-    }
-    let direction = instructions.get(steps % instructions.len()).unwrap();
-    match direction {
-        Direction::Left => calculate_ghost_steps(
-            instructions,
-            nodes,
-            nodes.get(&location.left).unwrap(),
-            steps + 1,
-        ),
-        Direction::Right => calculate_ghost_steps(
-            instructions,
-            nodes,
-            nodes.get(&location.right).unwrap(),
-            steps + 1,
-        ),
+    let mut steps = 0_usize;
+    loop {
+        if location.is_end {
+            return steps;
+        }
+        let direction = instructions.get(steps % instructions.len()).unwrap();
+        location = match direction {
+            Direction::Left => nodes.get(&location.left).unwrap(),
+            Direction::Right => nodes.get(&location.right).unwrap(),
+        };
+        steps += 1;
     }
 }
 
 fn calculate_smart_ghost_steps(
     instructions: &Vec<Direction>,
     nodes: &HashMap<String, Node>,
-    location: Vec<&Node>,
-    steps: usize,
+    location: Vec<&Node>
 ) -> usize {
     location
         .iter()
-        .map(|n| calculate_ghost_steps(instructions, nodes, n, steps))
+        .map(|n| calculate_ghost_steps(instructions, nodes, n))
         .fold(0, |prev, current| {
             if prev == 0 {
                 current
