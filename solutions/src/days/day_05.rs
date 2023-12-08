@@ -12,25 +12,22 @@ impl Solution for Puzzle {
     async fn solve_a(&mut self, input: String) -> Result<Answer, String> {
         let (seeds, maps) = parse_input(input);
         let locations = seeds.into_iter().map(|s| convert(s, &maps));
-        Answer::from(locations.min()).into()
+        let min_loc: Option<usize> = locations.min();
+        Answer::from(min_loc).into()
     }
 
     async fn solve_b(&mut self, input: String) -> Result<Answer, String> {
-        let (seeds, mut maps) = parse_input(input);
-        maps.reverse();
+        let (seeds, maps) = parse_input(input);
         let seed_ranges = seeds
             .chunks(2)
             .into_iter()
-            .map(|s| s[0]..s[0]+s[1])
+            .map(|s| s[0]..s[0] + s[1])
             .collect::<Vec<Range<usize>>>();
-        let mut l = 1;
-        let min_loc = loop {
-            let seed = reverse(l, &maps);
-            if seed_ranges.iter().any(|r| r.contains(&seed)) {
-                break l;
-            }
-            l += 1;
-        };
+        let min_loc = seed_ranges
+            .into_iter()
+            .flat_map(|s| convert_range(s, &maps))
+            .map(|s| s.start)
+            .min();
         Answer::from(min_loc).into()
     }
 
@@ -67,6 +64,18 @@ fn convert(value: usize, maps: &[ConversionMap]) -> usize {
     }
     value
 }
+fn convert_range(value: Range<usize>, maps: &[ConversionMap]) -> Vec<Range<usize>> {
+    let mut value = vec![value];
+    for map in maps {
+        let mut next_ranges = vec![];
+        for v in value {
+            next_ranges.extend(map.convert_range(v));
+        }
+        value = next_ranges;
+    }
+    value
+}
+#[allow(dead_code)]
 fn reverse(value: usize, maps: &[ConversionMap]) -> usize {
     let mut value = value;
     for map in maps {
@@ -88,6 +97,31 @@ impl ConversionMap {
             None => value,
         }
     }
+    fn convert_range(&self, value: Range<usize>) -> Vec<Range<usize>> {
+        let mut value_range = value.clone();
+        let mut next_seed_ranges = vec![];
+        self.ranges
+            .iter()
+            .filter(|r| r.from.start <= value.end && r.from.end > value.start)
+            .for_each(|r| {
+                if r.from.start > value_range.start {
+                    next_seed_ranges.push(value_range.start..r.from.start); // out of bounds, retain value
+                }
+                let start_in_range = value_range.start.max(r.from.start);
+                let start_delta = start_in_range - r.from.start;
+                let range_size = (r.to.len() - start_delta).min(value_range.len()); // get smallest range
+                if range_size > 0 {
+                    let converted_range = (r.to.start + start_delta)..(r.to.start + start_delta + range_size) as usize; // in bounds, add converted value
+                    next_seed_ranges.push(converted_range);
+                    value_range.start += range_size;
+                }
+            });
+        if value_range.len() > 0 {
+            next_seed_ranges.push(value_range); // add remaining out of bounds, retain value
+        }
+        next_seed_ranges
+    }
+    #[allow(dead_code)]
     fn reverse(&self, value: usize) -> usize {
         match self.ranges.iter().find(|r| r.to.contains(&value)) {
             Some(range) => range.from.start + (value - range.to.start),
@@ -104,7 +138,7 @@ impl FromStr for ConversionMap {
         let mut ranges: Vec<ConversionRange> = lines
             .map(|r| r.parse::<ConversionRange>().unwrap())
             .collect();
-        ranges.sort_by(|a, b| a.to.start.cmp(&b.to.start));
+        ranges.sort_by(|a, b| a.from.start.cmp(&b.from.start));
         Ok(Self {
             name: name.into(),
             ranges,
