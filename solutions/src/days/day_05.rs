@@ -29,7 +29,7 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    fn get_shapes(&mut self, _input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
+    fn get_shapes(&mut self, _input: String) -> Option<Vec<ui_support::DisplayData>> {
         None
     }
 }

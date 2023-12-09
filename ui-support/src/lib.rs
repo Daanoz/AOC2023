@@ -1,3 +1,3 @@
-mod shape;
+mod display_data;
 
-pub use shape::Shape;
+pub use display_data::DisplayData;

@@ -22,13 +22,13 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    fn get_shapes(&mut self, input: String, _rect: egui::Rect) -> Option<Vec<ui_support::Shape>> {
+    fn get_shapes(&mut self, input: String) -> Option<Vec<ui_support::DisplayData>> {
         use egui::epaint::*;
 
         let mut shapes = vec![];
         let (symbols, numbers) = parse_input(input);
         shapes.extend(symbols.iter().enumerate().map(|(_, (coord, char))| {
-            ui_support::Shape::text(
+            ui_support::DisplayData::text(
                 Pos2::new(coord.1 as f32, coord.0 as f32),
                 char.to_string(),
                 1.0,
@@ -36,7 +36,7 @@ impl Solution for Puzzle {
             )
         }));
         shapes.extend(numbers.iter().map(|n| {
-            ui_support::Shape::text(
+            ui_support::DisplayData::text(
                 Pos2::new(n.coord.1 as f32, n.coord.0 as f32),
                 n.value.to_string(),
                 1.0,
@@ -44,7 +44,7 @@ impl Solution for Puzzle {
             )
         }));
         shapes.extend(get_attached_numbers(&symbols, &numbers).map(|n| {
-            ui_support::Shape::text(
+            ui_support::DisplayData::text(
                 Pos2::new(n.coord.1 as f32, n.coord.0 as f32),
                 n.value.to_string(),
                 1.0,
@@ -53,10 +53,10 @@ impl Solution for Puzzle {
         }));
         shapes.extend(
             get_numbers_with_gears(&symbols, &numbers).flat_map(|(gear, numbers)| {
-                let mut s: Vec<ui_support::Shape> = numbers
+                let mut s: Vec<ui_support::DisplayData> = numbers
                     .iter()
                     .map(|n| {
-                        ui_support::Shape::text(
+                        ui_support::DisplayData::text(
                             Pos2::new(n.coord.1 as f32, n.coord.0 as f32),
                             n.value.to_string(),
                             1.0,
@@ -64,7 +64,7 @@ impl Solution for Puzzle {
                         )
                     })
                     .collect();
-                s.push(ui_support::Shape::text(
+                s.push(ui_support::DisplayData::text(
                     Pos2::new(gear.1 as f32, gear.0 as f32),
                     "*".to_string(),
                     1.0,
