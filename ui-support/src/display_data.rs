@@ -8,20 +8,6 @@ pub enum DisplayData {
 }
 
 impl DisplayData {
-    pub fn into_native_shape(self, to_screen: emath::RectTransform) -> EShape {
-        match self {
-            Self::NativeShape(shape) => match shape {
-                EShape::Rect(r) => EShape::Rect(RectShape {
-                    rect: to_screen.transform_rect(r.rect),
-                    ..r
-                }),
-                _ => panic!("Unsupported shape type"),
-            },
-            Self::TextShape(_) => EShape::Noop,
-            Self::LogLine(_) => EShape::Noop,
-        }
-    }
-
     pub fn paint(&self, painter: &egui::Painter, to_screen: emath::RectTransform) -> Option<EShape> {
         match self {
             Self::NativeShape(shape) => match shape {
@@ -29,9 +15,24 @@ impl DisplayData {
                     rect: to_screen.transform_rect(r.rect),
                     ..*r
                 })),
+                EShape::Circle(c) => Some(EShape::Circle(CircleShape {
+                    center: to_screen.transform_pos(c.center),
+                    radius: to_screen.scale().x * (c.radius),
+                    ..*c
+                })),
+                EShape::LineSegment { points, stroke } => Some(EShape::LineSegment {
+                    points: [
+                        to_screen.transform_pos(points[0]),
+                        to_screen.transform_pos(points[1]),
+                    ],
+                    stroke: *stroke,
+                }),
+                EShape::Path(path) => Some(EShape::Path(PathShape {
+                    points: path.points.iter().map(|p| to_screen.transform_pos(*p)).collect(),
+                    ..*path
+                })),
                 _ => panic!("Unsupported shape type"),
             },
-            // Self::NativeShape(_) => (),
             Self::TextShape(text) => {
                 let size = to_screen.scale().y * text.size;
                 for (index, char) in text.text.chars().enumerate() {
