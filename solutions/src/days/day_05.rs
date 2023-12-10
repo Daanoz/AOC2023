@@ -104,8 +104,8 @@ impl ConversionMap {
                 let start_delta = start_in_range - r.from.start;
                 let range_size = (r.to.len() - start_delta).min(value_range.len()); // get smallest range
                 if range_size > 0 {
-                    let converted_range = (r.to.start + start_delta)
-                        ..(r.to.start + start_delta + range_size); // in bounds, add converted value
+                    let converted_range =
+                        (r.to.start + start_delta)..(r.to.start + start_delta + range_size); // in bounds, add converted value
                     next_seed_ranges.push(converted_range);
                     value_range.start += range_size;
                 }

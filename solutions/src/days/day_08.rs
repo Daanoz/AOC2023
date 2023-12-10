@@ -39,10 +39,7 @@ fn parse_input(input: String) -> (Vec<Direction>, HashMap<String, Node>) {
     (instructions, nodes)
 }
 
-fn calculate_steps(
-    instructions: &Vec<Direction>,
-    nodes: &HashMap<String, Node>
-) -> usize {
+fn calculate_steps(instructions: &Vec<Direction>, nodes: &HashMap<String, Node>) -> usize {
     let mut location = "AAA";
     let mut steps = 0_usize;
     loop {
@@ -62,7 +59,7 @@ fn calculate_steps(
 fn calculate_ghost_steps<'a>(
     instructions: &'a Vec<Direction>,
     nodes: &'a HashMap<String, Node>,
-    mut location: &'a Node
+    mut location: &'a Node,
 ) -> usize {
     let mut steps = 0_usize;
     loop {
@@ -81,7 +78,7 @@ fn calculate_ghost_steps<'a>(
 fn calculate_smart_ghost_steps(
     instructions: &Vec<Direction>,
     nodes: &HashMap<String, Node>,
-    location: Vec<&Node>
+    location: Vec<&Node>,
 ) -> usize {
     location
         .iter()

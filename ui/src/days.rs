@@ -65,7 +65,7 @@ impl PuzzleViewport {
         let puzzle = Arc::clone(&self.puzzle);
         let updater = async move {
             let input = aoc2023::get_input(day, None).await.map_err(PuzzleError)?;
-            let mut solution = puzzle.lock().await;            
+            let mut solution = puzzle.lock().await;
             let start = std::time::Instant::now();
             let answer = if second_part {
                 solution.solve_b(input)
@@ -114,7 +114,9 @@ impl PuzzleViewport {
                         let mut job = egui::text::LayoutJob::single_section(
                             log_data,
                             egui::TextFormat {
-                                font_id: egui::FontId::monospace(8.0 * (self.visualization_zoom.unwrap_or(100.0) as f32 / 100.0) ),
+                                font_id: egui::FontId::monospace(
+                                    8.0 * (self.visualization_zoom.unwrap_or(100.0) as f32 / 100.0),
+                                ),
                                 ..Default::default()
                             },
                         );
@@ -183,7 +185,11 @@ fn render_shapes(ui: &mut Ui, zoom: Option<f64>, visualization_data: &Visualizat
     );
     let to_screen = emath::RectTransform::from_to(from, to);
 
-    let shapes: Vec<epaint::Shape> = visualization_data.shapes.iter().filter_map(|s| s.paint(&painter, to_screen)).collect();
+    let shapes: Vec<epaint::Shape> = visualization_data
+        .shapes
+        .iter()
+        .filter_map(|s| s.paint(&painter, to_screen))
+        .collect();
     painter.extend(shapes);
 }
 

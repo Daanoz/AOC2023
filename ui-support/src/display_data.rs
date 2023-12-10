@@ -8,7 +8,11 @@ pub enum DisplayData {
 }
 
 impl DisplayData {
-    pub fn paint(&self, painter: &egui::Painter, to_screen: emath::RectTransform) -> Option<EShape> {
+    pub fn paint(
+        &self,
+        painter: &egui::Painter,
+        to_screen: emath::RectTransform,
+    ) -> Option<EShape> {
         match self {
             Self::NativeShape(shape) => match shape {
                 EShape::Rect(r) => Some(EShape::Rect(RectShape {
@@ -28,7 +32,11 @@ impl DisplayData {
                     stroke: *stroke,
                 }),
                 EShape::Path(path) => Some(EShape::Path(PathShape {
-                    points: path.points.iter().map(|p| to_screen.transform_pos(*p)).collect(),
+                    points: path
+                        .points
+                        .iter()
+                        .map(|p| to_screen.transform_pos(*p))
+                        .collect(),
                     ..*path
                 })),
                 _ => panic!("Unsupported shape type"),
@@ -61,8 +69,8 @@ impl DisplayData {
                 let width = size * text.text.len() as f32;
                 let height = size;
                 Rect::from_min_max(text.pos, text.pos + vec2(width, height))
-            },
-            Self::LogLine(_) => Rect::ZERO
+            }
+            Self::LogLine(_) => Rect::ZERO,
         }
     }
 

@@ -49,10 +49,7 @@ fn read_input(input: String) -> Vec<(usize, usize)> {
         .split_ascii_whitespace()
         .map(|s| s.parse::<usize>().unwrap())
         .collect();
-    times
-        .into_iter()
-        .zip(distances)
-        .collect::<Vec<_>>()
+    times.into_iter().zip(distances).collect::<Vec<_>>()
 }
 
 fn read_input_with_fixed_kerning(input: String) -> Vec<(usize, usize)> {

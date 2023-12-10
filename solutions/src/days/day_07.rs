@@ -13,9 +13,7 @@ impl Solution for Puzzle {
         let total_winnings = hands
             .into_iter()
             .enumerate()
-            .fold(0_usize, |acc, (index, hand)| {
-                acc + (hand.bid * (index + 1))
-            });
+            .fold(0_usize, |acc, (index, hand)| acc + (hand.bid * (index + 1)));
         Answer::from(total_winnings).into()
     }
 
@@ -25,9 +23,7 @@ impl Solution for Puzzle {
         let total_winnings = hands
             .into_iter()
             .enumerate()
-            .fold(0_usize, |acc, (index, hand)| {
-                acc + (hand.bid * (index + 1))
-            });
+            .fold(0_usize, |acc, (index, hand)| acc + (hand.bid * (index + 1)));
         Answer::from(total_winnings).into()
     }
 

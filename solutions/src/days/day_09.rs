@@ -27,7 +27,10 @@ impl Solution for Puzzle {
     fn get_shapes(&mut self, input: String) -> Option<Vec<ui_support::DisplayData>> {
         let history = parse_input(input);
         let list_as_str = |list: &Vec<isize>| -> String {
-            list.iter().map(|n| n.to_string()).collect::<Vec<String>>().join(" ")
+            list.iter()
+                .map(|n| n.to_string())
+                .collect::<Vec<String>>()
+                .join(" ")
         };
         Some(
             history
@@ -44,11 +47,15 @@ impl Solution for Puzzle {
                         let delta_line = list_as_str(&v);
                         let delta_length: isize = delta_line.len() as isize;
                         let offset = ((initial_length - delta_length) / 2).max(0);
-                        log_lines.push(ui_support::DisplayData::log_line(format!("{}{}", " ".repeat(offset as usize), delta_line)));
+                        log_lines.push(ui_support::DisplayData::log_line(format!(
+                            "{}{}",
+                            " ".repeat(offset as usize),
+                            delta_line
+                        )));
                     }
-                    return log_lines
+                    return log_lines;
                 })
-                .collect::<Vec<ui_support::DisplayData>>()
+                .collect::<Vec<ui_support::DisplayData>>(),
         )
     }
 }
@@ -68,11 +75,11 @@ fn extrapolate(history: &[isize]) -> (isize, isize) {
     if history.iter().all(|n| n == &0_isize) {
         return (0, 0);
     }
-    let deltas: Vec<isize> = deltas(&history);
+    let deltas: Vec<isize> = deltas(history);
     let extrapolated = extrapolate(&deltas);
     (
         deltas.first().unwrap() - extrapolated.0,
-        deltas.last().unwrap() + extrapolated.1
+        deltas.last().unwrap() + extrapolated.1,
     )
 }
 
