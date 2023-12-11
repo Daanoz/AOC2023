@@ -77,36 +77,26 @@ fn find_enclosed_ground_cells(grid: &Grid, path: &[Coord]) -> Vec<Coord> {
     let enclosed_cells = grid
         .iter()
         .enumerate()
-        .flat_map(|(y, row)| {
-            row.iter().enumerate().filter_map(move |(x, _)| {
-                if path.contains(&(x, y)) {
-                    None
-                } else {
-                    Some((x, y))
-                }
-            })
-        })
-        .filter(|coord| is_enclosed(coord, &path_map))
+        .flat_map(|(y, row)| get_enclosed(y, row, &path_map))
         .collect::<Vec<Coord>>();
     enclosed_cells
 }
 
-fn is_enclosed(cell: &Coord, path: &HashMap<Coord, Cell>) -> bool {
+fn get_enclosed(y: usize, row: &[Cell], path: &HashMap<Coord, Cell>) -> Vec<Coord> {
     let mut border_count = 0;
-    let mut current = *cell;
     let mut corner_hit: Option<&Cell> = None;
-    while current.1 > 0 {
-        current.1 -= 1;
-        if let Some(cell) = path.get(&current) {
-            match cell {
-                Cell::Horizontal => {
+    let mut coords: Vec<Coord> = vec![];
+    for (x, cell) in row.iter().enumerate() {
+        if let Some(path_cell) = path.get(&(x, y)) {
+            match path_cell {
+                Cell::Vertical => {
                     border_count += 1;
                 }
-                Cell::BendNE | Cell::BendNW => {
+                Cell::BendNE | Cell::BendSE => {
                     corner_hit = Some(cell);
                 }
-                Cell::BendSE => {
-                    if corner_hit == Some(&Cell::BendNW) {
+                Cell::BendNW => {
+                    if corner_hit == Some(&Cell::BendSE) {
                         border_count += 1;
                     }
                     corner_hit = None;
@@ -119,9 +109,11 @@ fn is_enclosed(cell: &Coord, path: &HashMap<Coord, Cell>) -> bool {
                 }
                 _ => {}
             }
+        } else if border_count % 2 == 1 {
+            coords.push((x, y));
         }
     }
-    border_count % 2 == 1
+    coords
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -181,31 +173,13 @@ impl Cell {
         options[0].to_owned()
     }
     fn find_first_step(grid: &Grid, (s_x, s_y): Coord) -> Coord {
-        if s_x > 0 {
-            match &grid[s_y][s_x - 1] {
-                Cell::Horizontal | Cell::BendNE | Cell::BendSE => return (s_x - 1, s_y),
-                _ => (),
-            };
+        let start_cell = Self::replace_start(grid, (s_x, s_y));
+        match start_cell {
+            Cell::Horizontal => (s_x + 1, s_y),
+            Cell::BendNE | Cell::BendNW => (s_x, s_y - 1),
+            Cell::BendSE | Cell::BendSW | Cell::Vertical => (s_x, s_y + 1),
+            _ => panic!("Invalid start cell"),
         }
-        if s_y > 0 {
-            match &grid[s_y - 1][s_x] {
-                Cell::Vertical | Cell::BendSW | Cell::BendSE => return (s_x, s_y - 1),
-                _ => (),
-            };
-        }
-        if s_y < grid.len() - 1 {
-            match &grid[s_y + 1][s_x] {
-                Cell::Vertical | Cell::BendNW | Cell::BendNE => return (s_x, s_y + 1),
-                _ => (),
-            };
-        }
-        if s_x < grid[0].len() - 1 {
-            match &grid[s_y][s_x + 1] {
-                Cell::Horizontal | Cell::BendNW | Cell::BendSW => return (s_x + 1, s_y),
-                _ => (),
-            };
-        }
-        panic!("No first step found")
     }
     fn make_step(&self, (o_x, o_y): Coord, (c_x, c_y): Coord) -> Coord {
         match self {
