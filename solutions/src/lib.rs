@@ -4,9 +4,11 @@ pub mod days;
 
 pub async fn get_input(day: u8, aoc_session: Option<String>) -> Result<String, String> {
     let filename = format!("input_{}.txt", day);
-    let input_path = path::Path::new(&env::current_dir().map_err(|e| e.to_string())?)
-        .join("inputs")
-        .join(&filename);
+    let current_dir = &env::current_dir().map_err(|e| e.to_string())?;
+    let cwd = std::env::var("CARGO_MANIFEST_DIR")
+        .map(|md| path::Path::new(&md).join("../"))
+        .unwrap_or_else(|_| path::Path::new(current_dir).to_path_buf());
+    let input_path = cwd.join("inputs").join(&filename);
     let aoc_session = aoc_session.or(env::var_os("AOC_SESSION").and_then(|v| v.into_string().ok()));
 
     if input_path.is_dir() {
