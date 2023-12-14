@@ -349,21 +349,21 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
                             center: egui::Pos2::new(x as f32 + 0.5, y as f32 + 0.5),
                             radius: 0.5,
                             fill: Color32::from_rgb(0, 255, 0),
-                            stroke: Stroke::new(1.0, Color32::from_rgb(0, 0, 0)),
+                            stroke: Stroke::new(0.1, Color32::from_rgb(0, 0, 0)),
                         })),
                         Cell::Horizontal => Some(Shape::LineSegment {
                             points: [
                                 egui::Pos2::new(x as f32, y as f32 + 0.5),
                                 egui::Pos2::new(x as f32 + 1.0, y as f32 + 0.5),
                             ],
-                            stroke: Stroke::new(1.0, stroke_color),
+                            stroke: Stroke::new(0.1, stroke_color),
                         }),
                         Cell::Vertical => Some(Shape::LineSegment {
                             points: [
                                 egui::Pos2::new(x as f32 + 0.5, y as f32),
                                 egui::Pos2::new(x as f32 + 0.5, y as f32 + 1.0),
                             ],
-                            stroke: Stroke::new(1.0, stroke_color),
+                            stroke: Stroke::new(0.1, stroke_color),
                         }),
                         Cell::BendNE => Some(Shape::Path(PathShape {
                             points: vec![
@@ -373,7 +373,7 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
                             ],
                             closed: false,
                             fill: Color32::TRANSPARENT,
-                            stroke: Stroke::new(1.0, stroke_color),
+                            stroke: Stroke::new(0.1, stroke_color),
                         })),
                         Cell::BendNW => Some(Shape::Path(PathShape {
                             points: vec![
@@ -383,7 +383,7 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
                             ],
                             closed: false,
                             fill: Color32::TRANSPARENT,
-                            stroke: Stroke::new(1.0, stroke_color),
+                            stroke: Stroke::new(0.1, stroke_color),
                         })),
                         Cell::BendSE => Some(Shape::Path(PathShape {
                             points: vec![
@@ -393,7 +393,7 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
                             ],
                             closed: false,
                             fill: Color32::TRANSPARENT,
-                            stroke: Stroke::new(1.0, stroke_color),
+                            stroke: Stroke::new(0.1, stroke_color),
                         })),
                         Cell::BendSW => Some(Shape::Path(PathShape {
                             points: vec![
@@ -403,13 +403,13 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
                             ],
                             closed: false,
                             fill: Color32::TRANSPARENT,
-                            stroke: Stroke::new(1.0, stroke_color),
+                            stroke: Stroke::new(0.1, stroke_color),
                         })),
                         Cell::Ground => Some(Shape::Circle(CircleShape {
                             center: egui::Pos2::new(x as f32 + 0.5, y as f32 + 0.5),
                             radius: 0.5,
                             fill: stroke_color,
-                            stroke: Stroke::new(1.0, Color32::from_rgb(0, 0, 0)),
+                            stroke: Stroke::new(0.1, Color32::from_rgb(0, 0, 0)),
                         })),
                     }
                 })

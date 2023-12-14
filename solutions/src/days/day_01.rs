@@ -14,8 +14,8 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    fn get_shapes(&mut self, _input: String) -> Option<Vec<ui_support::DisplayData>> {
-        None
+    fn get_shapes(&mut self, input: String) -> Option<Vec<ui_support::DisplayData>> {
+        Some(build_shapes_for_ui(input))
     }
 }
 
@@ -30,12 +30,16 @@ fn read_numbers(input: String) -> u32 {
         .sum()
 }
 
-fn read_str_numbers(input: String) -> u32 {
+fn get_regex_pair() -> (regex::Regex, regex::Regex) {
     let start_regex =
         regex::Regex::new(r"^.*?(one|two|three|four|five|six|seven|eight|nine|[0-9])").unwrap();
     let end_regex =
         regex::Regex::new(r".*(one|two|three|four|five|six|seven|eight|nine|[0-9]).*?$").unwrap();
+    (start_regex, end_regex)
+}
 
+fn read_str_numbers(input: String) -> u32 {
+    let (start_regex, end_regex) = get_regex_pair();
     input
         .trim()
         .lines()
@@ -97,4 +101,62 @@ zoneight234
             Ok(Answer::from(281))
         )
     }
+}
+
+#[cfg(feature = "ui")]
+fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
+    let (start_regex, end_regex) = get_regex_pair();
+    input
+        .trim()
+        .lines()
+        .enumerate()
+        .flat_map(|(i, line)| {
+            let start = start_regex.captures(line).unwrap().get(1).unwrap();
+            let end = end_regex.captures(line).unwrap().get(1).unwrap();
+            let out = str_as_digit(start.as_str()) * 10 + str_as_digit(end.as_str());
+            let start_range = start.range();
+            let mut end_range = end.range();
+            if start_range.end > end_range.start {
+                end_range.start = start_range.end;
+            }
+            vec![
+                ui_support::DisplayData::text(
+                    egui::Pos2::new(0.0, 1.0 * (i as f32)),
+                    line[0..start_range.start].to_string(),
+                    1.0,
+                    egui::Color32::WHITE,
+                ),
+                ui_support::DisplayData::text(
+                    egui::Pos2::new(start_range.start as f32, 1.0 * (i as f32)),
+                    line[start_range.clone()].to_string(),
+                    1.0,
+                    egui::Color32::RED,
+                ),
+                ui_support::DisplayData::text(
+                    egui::Pos2::new(start_range.end as f32, 1.0 * (i as f32)),
+                    line[start_range.end..end_range.start].to_string(),
+                    1.0,
+                    egui::Color32::WHITE,
+                ),
+                ui_support::DisplayData::text(
+                    egui::Pos2::new(end_range.start as f32, 1.0 * (i as f32)),
+                    line[end_range.clone()].to_string(),
+                    1.0,
+                    egui::Color32::DARK_RED,
+                ),
+                ui_support::DisplayData::text(
+                    egui::Pos2::new(end_range.end as f32, 1.0 * (i as f32)),
+                    line[end_range.end..].to_string(),
+                    1.0,
+                    egui::Color32::WHITE,
+                ),
+                ui_support::DisplayData::text(
+                    egui::Pos2::new(line.len() as f32, 1.0 * (i as f32)),
+                    format!(" = {}", out),
+                    1.0,
+                    egui::Color32::BLUE,
+                ),
+            ]
+        })
+        .collect::<Vec<ui_support::DisplayData>>()
 }
