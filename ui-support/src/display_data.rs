@@ -17,19 +17,13 @@ impl DisplayData {
             Self::NativeShape(shape) => match shape {
                 EShape::Rect(r) => Some(EShape::Rect(RectShape {
                     rect: to_screen.transform_rect(r.rect),
-                    stroke: Stroke::new(
-                        to_screen.scale().x * r.stroke.width,
-                        r.stroke.color,
-                    ),
+                    stroke: Stroke::new(to_screen.scale().x * r.stroke.width, r.stroke.color),
                     ..*r
                 })),
                 EShape::Circle(c) => Some(EShape::Circle(CircleShape {
                     center: to_screen.transform_pos(c.center),
                     radius: to_screen.scale().x * (c.radius),
-                    stroke: Stroke::new(
-                        to_screen.scale().x * c.stroke.width,
-                        c.stroke.color,
-                    ),
+                    stroke: Stroke::new(to_screen.scale().x * c.stroke.width, c.stroke.color),
                     ..*c
                 })),
                 EShape::LineSegment { points, stroke } => Some(EShape::LineSegment {
@@ -37,10 +31,7 @@ impl DisplayData {
                         to_screen.transform_pos(points[0]),
                         to_screen.transform_pos(points[1]),
                     ],
-                    stroke: Stroke::new(
-                        to_screen.scale().x * stroke.width,
-                        stroke.color,
-                    ),
+                    stroke: Stroke::new(to_screen.scale().x * stroke.width, stroke.color),
                 }),
                 EShape::Path(path) => Some(EShape::Path(PathShape {
                     points: path
@@ -48,10 +39,7 @@ impl DisplayData {
                         .iter()
                         .map(|p| to_screen.transform_pos(*p))
                         .collect(),
-                    stroke: Stroke::new(
-                        to_screen.scale().x * path.stroke.width,
-                        path.stroke.color,
-                    ),
+                    stroke: Stroke::new(to_screen.scale().x * path.stroke.width, path.stroke.color),
                     ..*path
                 })),
                 _ => panic!("Unsupported shape type"),

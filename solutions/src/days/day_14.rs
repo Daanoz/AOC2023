@@ -27,13 +27,16 @@ impl Solution for Puzzle {
                 let index: usize = weights.iter().rposition(|&x| x == weight).unwrap();
                 weights.push(weight);
                 let cycle_size = (weights.len() - index) - 1;
-                if weights.len() > cycle_size*2 {
-                    let slice1 = &weights[weights.len() - (cycle_size*1)..];
-                    let slice2 = &weights[weights.len() - (cycle_size*2)..weights.len() - (cycle_size*1)];
+                if weights.len() > cycle_size * 2 {
+                    let slice1 = &weights[weights.len() - cycle_size..];
+                    let slice2 = &weights
+                        [weights.len() - (cycle_size * 2)..weights.len() - cycle_size];
                     if slice1 == slice2 {
                         let remaining_cycles = 1_000_000_000 - i - 1;
                         let cycle_index = remaining_cycles % cycle_size;
-                        return Ok(Answer::from(weights[(weights.len() - 1 - cycle_size) + cycle_index]));
+                        return Ok(Answer::from(
+                            weights[(weights.len() - 1 - cycle_size) + cycle_index],
+                        ));
                     }
                 }
             } else {
@@ -44,7 +47,11 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    fn get_shapes(&mut self, _input: String) -> Option<Vec<ui_support::DisplayData>> {
+    fn get_shapes(
+        &mut self,
+        _input: String,
+        _request: ui_support::DisplayRequest,
+    ) -> Option<ui_support::DisplayResult> {
         None
     }
 }
@@ -122,9 +129,9 @@ fn move_direction(grid: Grid, direction: &Direction) -> Grid {
                     y = (y as isize + delta) as usize;
                 }
             }
-        },
+        }
         Direction::West | Direction::East => {
-            for y in 0..grid.len() {
+            for grid_row in &mut grid {
                 let mut x = 0;
                 let mut delta = 1_isize;
                 let grid_range = 0..width;
@@ -135,13 +142,13 @@ fn move_direction(grid: Grid, direction: &Direction) -> Grid {
 
                 while grid_range.contains(&x) {
                     // only role rocks if current cell is empty
-                    if grid[y][x] != Cell::Space {
+                    if grid_row[x] != Cell::Space {
                         x = (x as isize + delta) as usize;
                         continue;
                     }
                     let mut x2 = (x as isize + delta) as usize;
                     while grid_range.contains(&x2) {
-                        match grid[y][x2] {
+                        match grid_row[x2] {
                             Cell::Space => {
                                 x2 = (x2 as isize + delta) as usize;
                                 continue;
@@ -151,8 +158,8 @@ fn move_direction(grid: Grid, direction: &Direction) -> Grid {
                                 break;
                             }
                             Cell::Boulder => {
-                                grid[y][x] = Cell::Boulder;
-                                grid[y][x2] = Cell::Space;
+                                grid_row[x] = Cell::Boulder;
+                                grid_row[x2] = Cell::Space;
                                 break;
                             }
                         }

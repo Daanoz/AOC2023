@@ -23,7 +23,11 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    fn get_shapes(&mut self, _input: String) -> Option<Vec<ui_support::DisplayData>> {
+    fn get_shapes(
+        &mut self,
+        _input: String,
+        _request: ui_support::DisplayRequest,
+    ) -> Option<ui_support::DisplayResult> {
         None
     }
 }

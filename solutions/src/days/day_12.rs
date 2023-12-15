@@ -16,7 +16,11 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    fn get_shapes(&mut self, _input: String) -> Option<Vec<ui_support::DisplayData>> {
+    fn get_shapes(
+        &mut self,
+        _input: String,
+        _request: ui_support::DisplayRequest,
+    ) -> Option<ui_support::DisplayResult> {
         None
     }
 }
@@ -51,6 +55,7 @@ fn solve_line_part_a((springs, checksum): (Vec<char>, Vec<usize>)) -> usize {
 
 fn solve_line_part_b((springs, checksum): (Vec<char>, Vec<usize>)) -> usize {
     let mut memo_map: HashMap<(usize, usize), usize> = HashMap::new();
+    #[allow(clippy::useless_vec)] // false-positive https://github.com/rust-lang/rust-clippy/issues/11958
     let springs = vec![springs; 5].join(&'?');
     let checksum = checksum.repeat(5);
     find_possibilities(&springs, &checksum, 0, 0, &mut memo_map)
@@ -135,13 +140,14 @@ fn find_possibilities(
                 );
             }
             // try to use '.'
-            result + find_possibilities(
-                springs,
-                checksum,
-                checksum_index,
-                spring_index + 1,
-                memo_map,
-            )
+            result
+                + find_possibilities(
+                    springs,
+                    checksum,
+                    checksum_index,
+                    spring_index + 1,
+                    memo_map,
+                )
         }
         _ => panic!("invalid input"),
     };

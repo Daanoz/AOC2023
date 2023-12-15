@@ -24,39 +24,12 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    fn get_shapes(&mut self, input: String) -> Option<Vec<ui_support::DisplayData>> {
-        let history = parse_input(input);
-        let list_as_str = |list: &Vec<isize>| -> String {
-            list.iter()
-                .map(|n| n.to_string())
-                .collect::<Vec<String>>()
-                .join(" ")
-        };
-        Some(
-            history
-                .into_iter()
-                .flat_map(|mut v| {
-                    let start_line = list_as_str(&v);
-                    let initial_length = start_line.len() as isize;
-                    let mut log_lines = vec![ui_support::DisplayData::log_line(start_line)];
-                    for _ in 1..20 {
-                        if v.iter().all(|n| n == &0_isize) {
-                            break;
-                        }
-                        v = deltas(&v);
-                        let delta_line = list_as_str(&v);
-                        let delta_length: isize = delta_line.len() as isize;
-                        let offset = ((initial_length - delta_length) / 2).max(0);
-                        log_lines.push(ui_support::DisplayData::log_line(format!(
-                            "{}{}",
-                            " ".repeat(offset as usize),
-                            delta_line
-                        )));
-                    }
-                    return log_lines;
-                })
-                .collect::<Vec<ui_support::DisplayData>>(),
-        )
+    fn get_shapes(
+        &mut self,
+        input: String,
+        _request: ui_support::DisplayRequest,
+    ) -> Option<ui_support::DisplayResult> {
+        Some(build_shapes_for_ui(input).into())
     }
 }
 
@@ -114,4 +87,38 @@ mod tests {
             Ok(Answer::from(2))
         )
     }
+}
+
+#[cfg(feature = "ui")]
+fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
+    let history = parse_input(input);
+    let list_as_str = |list: &Vec<isize>| -> String {
+        list.iter()
+            .map(|n| n.to_string())
+            .collect::<Vec<String>>()
+            .join(" ")
+    };
+    history
+        .into_iter()
+        .flat_map(|mut v| {
+            let start_line = list_as_str(&v);
+            let initial_length = start_line.len() as isize;
+            let mut log_lines = vec![ui_support::DisplayData::log_line(start_line)];
+            for _ in 1..20 {
+                if v.iter().all(|n| n == &0_isize) {
+                    break;
+                }
+                v = deltas(&v);
+                let delta_line = list_as_str(&v);
+                let delta_length: isize = delta_line.len() as isize;
+                let offset = ((initial_length - delta_length) / 2).max(0);
+                log_lines.push(ui_support::DisplayData::log_line(format!(
+                    "{}{}",
+                    " ".repeat(offset as usize),
+                    delta_line
+                )));
+            }
+            return log_lines;
+        })
+        .collect::<Vec<ui_support::DisplayData>>()
 }

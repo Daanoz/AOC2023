@@ -31,8 +31,12 @@ impl Solution for Puzzle {
     }
 
     #[cfg(feature = "ui")]
-    fn get_shapes(&mut self, input: String) -> Option<Vec<ui_support::DisplayData>> {
-        Some(build_shapes_for_ui(input))
+    fn get_shapes(
+        &mut self,
+        input: String,
+        _request: ui_support::DisplayRequest,
+    ) -> Option<ui_support::DisplayResult> {
+        Some(build_shapes_for_ui(input).into())
     }
 }
 
@@ -159,10 +163,10 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
 fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
     use egui::{
         epaint::{Color32, RectShape, Shape},
-        Pos2, Rect, Stroke, Rounding,
+        Pos2, Rect, Rounding, Stroke,
     };
     let get_rect = |x, y, color, active: bool| {
-        let pos = Rect::from_two_pos(Pos2::new(x + 0.2, y + 0.2 ), Pos2::new(x + 0.8, y + 0.8));
+        let pos = Rect::from_two_pos(Pos2::new(x + 0.2, y + 0.2), Pos2::new(x + 0.8, y + 0.8));
         Shape::Rect(if active {
             RectShape::filled(pos, Rounding::ZERO, color)
         } else {
@@ -182,15 +186,30 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
                 .flat_map(move |set| {
                     let mut cubes: Vec<Shape> = vec![];
                     for _ in 0..set.green {
-                        cubes.push(get_rect(x, y as f32, Color32::GREEN, set.green == min_cubes.green));
+                        cubes.push(get_rect(
+                            x,
+                            y as f32,
+                            Color32::GREEN,
+                            set.green == min_cubes.green,
+                        ));
                         x += 1.0;
                     }
                     for _ in 0..set.blue {
-                        cubes.push(get_rect(x, y as f32, Color32::BLUE, set.blue == min_cubes.blue));
+                        cubes.push(get_rect(
+                            x,
+                            y as f32,
+                            Color32::BLUE,
+                            set.blue == min_cubes.blue,
+                        ));
                         x += 1.0;
                     }
                     for _ in 0..set.red {
-                        cubes.push(get_rect(x, y as f32, Color32::RED, set.red == min_cubes.red));
+                        cubes.push(get_rect(
+                            x,
+                            y as f32,
+                            Color32::RED,
+                            set.red == min_cubes.red,
+                        ));
                         x += 1.0;
                     }
                     cubes

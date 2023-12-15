@@ -11,7 +11,7 @@ async fn main() -> Result<(), eframe::Error> {
         ..Default::default()
     };
     eframe::run_native(
-        "My egui App",
+        "Advent of Code 2023 - UI interface",
         options,
         Box::new(|cc| {
             // This gives us image support:
@@ -52,7 +52,7 @@ impl eframe::App for MyApp {
                         viewport_puzzle.get_day()
                     ))
                     .with_resizable(true)
-                    .with_inner_size([500.0, 500.0]),
+                    .with_inner_size([800.0, 600.0]),
                 move |ctx, class| {
                     assert!(
                         class == egui::ViewportClass::Immediate,
