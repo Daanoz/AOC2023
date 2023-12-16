@@ -55,7 +55,8 @@ fn solve_line_part_a((springs, checksum): (Vec<char>, Vec<usize>)) -> usize {
 
 fn solve_line_part_b((springs, checksum): (Vec<char>, Vec<usize>)) -> usize {
     let mut memo_map: HashMap<(usize, usize), usize> = HashMap::new();
-    #[allow(clippy::useless_vec)] // false-positive https://github.com/rust-lang/rust-clippy/issues/11958
+    // false-positive https://github.com/rust-lang/rust-clippy/issues/11958
+    #[allow(clippy::useless_vec)]
     let springs = vec![springs; 5].join(&'?');
     let checksum = checksum.repeat(5);
     find_possibilities(&springs, &checksum, 0, 0, &mut memo_map)

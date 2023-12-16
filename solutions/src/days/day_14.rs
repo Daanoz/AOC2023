@@ -29,8 +29,8 @@ impl Solution for Puzzle {
                 let cycle_size = (weights.len() - index) - 1;
                 if weights.len() > cycle_size * 2 {
                     let slice1 = &weights[weights.len() - cycle_size..];
-                    let slice2 = &weights
-                        [weights.len() - (cycle_size * 2)..weights.len() - cycle_size];
+                    let slice2 =
+                        &weights[weights.len() - (cycle_size * 2)..weights.len() - cycle_size];
                     if slice1 == slice2 {
                         let remaining_cycles = 1_000_000_000 - i - 1;
                         let cycle_index = remaining_cycles % cycle_size;

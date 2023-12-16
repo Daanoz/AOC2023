@@ -1,7 +1,8 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, hash::Hash};
 
 use super::Solution;
 use common::Answer;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 #[derive(Default)]
 pub struct Puzzle;
@@ -26,39 +27,36 @@ impl Solution for Puzzle {
     fn solve_b(&mut self, input: String) -> Result<Answer, String> {
         let grid = parse_input(&input);
         let dimensions: Dimensions = (grid[0].len(), grid.len());
-        let mut max = 0_usize;
-        for y in 0..dimensions.1 {
-            max = max.max(find_energized_tile_count(
-                &grid,
-                Beam {
-                    pos: (0, y),
-                    dir: Direction::Right,
-                },
-            ));
-            max = max.max(find_energized_tile_count(
-                &grid,
-                Beam {
-                    pos: (dimensions.0 - 1, y),
-                    dir: Direction::Left,
-                },
-            ));
-        }
-        for x in 0..dimensions.0 {
-            max = max.max(find_energized_tile_count(
-                &grid,
+        let mut beams: Vec<Beam> = (0..dimensions.1)
+            .flat_map(|y| {
+                vec![
+                    Beam {
+                        pos: (0, y),
+                        dir: Direction::Right,
+                    },
+                    Beam {
+                        pos: (dimensions.0 - 1, y),
+                        dir: Direction::Left,
+                    },
+                ]
+            })
+            .collect();
+        beams.extend((0..dimensions.0).flat_map(|x| {
+            vec![
                 Beam {
                     pos: (x, 0),
                     dir: Direction::Down,
                 },
-            ));
-            max = max.max(find_energized_tile_count(
-                &grid,
                 Beam {
                     pos: (x, dimensions.1 - 1),
                     dir: Direction::Up,
                 },
-            ));
-        }
+            ]
+        }));
+        let max = beams
+            .into_par_iter()
+            .map(|b| find_energized_tile_count(&grid, b))
+            .max();
         Answer::from(max).into()
     }
 
@@ -73,7 +71,7 @@ impl Solution for Puzzle {
 }
 
 fn find_energized_tile_count(grid: &Grid, start_beam: Beam) -> usize {
-    run_beam(&grid, start_beam).len()
+    run_beam(grid, start_beam).len()
 }
 
 fn run_beam(grid: &Grid, start_beam: Beam) -> HashSet<Pos> {
@@ -262,7 +260,7 @@ mod tests {
         let mut puzzle = Puzzle::default();
         assert_eq!(
             puzzle.solve_b(String::from(TEST_INPUT)),
-            Ok(Answer::from(""))
+            Ok(Answer::from(51))
         )
     }
 }

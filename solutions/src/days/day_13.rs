@@ -43,9 +43,9 @@ fn parse_section(input: &str, part_b: bool) -> usize {
 fn read_as_number_list(input: &str) -> Vec<u32> {
     input
         .lines()
-        .map(|l| 
+        .map(|l| {
             u32::from_str_radix(&l.to_string().replace('#', "1").replace('.', "0"), 2).unwrap()
-        )
+        })
         .collect()
 }
 
