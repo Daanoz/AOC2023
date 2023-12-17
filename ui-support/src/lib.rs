@@ -27,3 +27,6 @@ where
         .map(|s| s.into())
         .collect::<Vec<DisplayData>>()
 }
+pub fn pos_into_coord(pos: Pos2) -> (usize, usize) {
+    ((pos.x - 0.5) as usize, (pos.y - 0.5) as usize)
+}

@@ -267,7 +267,7 @@ mod tests {
 
 #[cfg(feature = "ui")]
 fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
-    use egui::epaint::{CircleShape, Color32, Shape, Stroke};
+    use egui::epaint::{CircleShape, Color32, Pos2, Shape, Stroke};
 
     let grid = parse_input(&input);
     let energized = run_beam(
@@ -279,55 +279,50 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
     );
     let mirror_color = Color32::from_rgb(255, 0, 0);
     let path_color = Color32::from_rgba_premultiplied(0, 255, 0, 75);
-    grid.into_iter()
-        .enumerate()
-        .flat_map(|(y, row)| {
-            row.into_iter()
-                .enumerate()
-                .flat_map(|(x, cell)| {
-                    let mut shapes = vec![match cell {
-                        Cell::HSplit => Some(Shape::LineSegment {
-                            points: [
-                                egui::Pos2::new(x as f32, y as f32 + 0.5),
-                                egui::Pos2::new(x as f32 + 1.0, y as f32 + 0.5),
-                            ],
-                            stroke: Stroke::new(0.1, mirror_color),
-                        }),
-                        Cell::VSplit => Some(Shape::LineSegment {
-                            points: [
-                                egui::Pos2::new(x as f32 + 0.5, y as f32),
-                                egui::Pos2::new(x as f32 + 0.5, y as f32 + 1.0),
-                            ],
-                            stroke: Stroke::new(0.1, mirror_color),
-                        }),
-                        Cell::DownRightMirror => Some(Shape::LineSegment {
-                            points: [
-                                egui::Pos2::new(x as f32, y as f32),
-                                egui::Pos2::new(x as f32 + 1.0, y as f32 + 1.0),
-                            ],
-                            stroke: Stroke::new(0.1, mirror_color),
-                        }),
-                        Cell::UpRightMirror => Some(Shape::LineSegment {
-                            points: [
-                                egui::Pos2::new(x as f32, y as f32 + 1.0),
-                                egui::Pos2::new(x as f32 + 1.0, y as f32),
-                            ],
-                            stroke: Stroke::new(0.1, mirror_color),
-                        }),
-                        _ => None,
-                    }];
-                    if energized.contains(&(x, y)) {
-                        shapes.push(Some(Shape::Circle(CircleShape::filled(
-                            egui::Pos2::new(x as f32 + 0.5, y as f32 + 0.5),
-                            0.2,
-                            path_color,
-                        ))));
-                    }
-                    shapes
-                })
-                .filter_map(|s| s)
-                .collect::<Vec<Shape>>()
-        })
-        .map(|s| s.into())
-        .collect()
+
+    ui_support::render_grid(&grid, move |cell, pos| {
+        let mut shapes: Vec<Option<ui_support::DisplayData>> = vec![match cell {
+            Cell::HSplit => Some(
+                Shape::LineSegment {
+                    points: [Pos2::new(pos.x - 0.5, pos.y), Pos2::new(pos.x + 0.5, pos.y)],
+                    stroke: Stroke::new(0.1, mirror_color),
+                }
+                .into(),
+            ),
+            Cell::VSplit => Some(
+                Shape::LineSegment {
+                    points: [Pos2::new(pos.x, pos.y - 0.5), Pos2::new(pos.x, pos.y + 0.5)],
+                    stroke: Stroke::new(0.1, mirror_color),
+                }
+                .into(),
+            ),
+            Cell::DownRightMirror => Some(
+                Shape::LineSegment {
+                    points: [
+                        Pos2::new(pos.x - 0.5, pos.y - 0.5),
+                        Pos2::new(pos.x + 0.5, pos.y + 0.5),
+                    ],
+                    stroke: Stroke::new(0.1, mirror_color),
+                }
+                .into(),
+            ),
+            Cell::UpRightMirror => Some(
+                Shape::LineSegment {
+                    points: [
+                        Pos2::new(pos.x + 0.5, pos.y - 0.5),
+                        Pos2::new(pos.x - 0.5, pos.y + 0.5),
+                    ],
+                    stroke: Stroke::new(0.1, mirror_color),
+                }
+                .into(),
+            ),
+            _ => None,
+        }];
+        if energized.contains(&ui_support::pos_into_coord(pos)) {
+            shapes.push(Some(
+                Shape::Circle(CircleShape::filled(pos, 0.2, path_color)).into(),
+            ));
+        }
+        shapes
+    })
 }
