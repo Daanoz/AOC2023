@@ -26,12 +26,6 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
-
-
-    std::env::vars().for_each(|(key, value)| {
-        println!("{}: {}", key, value);
-    });
-
     let args = Args::parse();
     if args.day.is_none() && !args.all {
         panic!("Either select a day with --day <DAY> or run all with --all");
