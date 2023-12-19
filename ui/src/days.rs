@@ -218,24 +218,29 @@ impl PuzzleVisualizer {
             ui.horizontal(|ui| {
                 ui.label("Select result: ");
                 ui.add(egui::Slider::from_get_set(
-                    0.0..=result_count as f64,
+                    1.0..=result_count as f64,
                     |val| {
-                        if val.is_some() {
-                            self.visualization_index = val.unwrap() as usize;
+                        if let Some(val) = val  {
+                            let val = val - 1.0;
+                            if self.visualization_index != val as usize {
+                                self.visualization_index = val as usize;
+                                self.shape_data = Some(self.fetch_shapes());
+                            }
                         }
-                        self.shape_data = Some(self.fetch_shapes());
                         self.visualization_index as f64
                     },
-                ));
+                ).step_by(1.0).fixed_decimals(0));
                 if ui.button("-").clicked() {
                     if self.visualization_index > 0 {
                         self.visualization_index = self.visualization_index - 1;
                     } else {
                         self.visualization_index = result_count - 1;
                     }
+                    self.shape_data = Some(self.fetch_shapes());
                 };
                 if ui.button("+").clicked() {
                     self.visualization_index = (self.visualization_index + 1) % result_count;
+                    self.shape_data = Some(self.fetch_shapes());
                 };
             });
         }
