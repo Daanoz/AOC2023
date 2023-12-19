@@ -27,11 +27,15 @@ pub async fn get_input(day: u8, aoc_session: Option<String>) -> Result<String, S
         return Err("Cannot download input, AOC_SESSION unavailable".to_string());
     };
 
+    let repo_url = env!("CARGO_PKG_REPOSITORY");
+    let authors = env!("CARGO_PKG_AUTHORS");
+
     let url = format!("https://adventofcode.com/{}/day/{}/input", "2023", day);
     let client = reqwest::Client::new();
     let response = client
         .get(url)
         .header("cookie", format!("session={}", aoc_session))
+        .header("User-Agent", format!("{} by {}", repo_url, authors))
         .send()
         .await
         .map_err(|e| e.to_string())?;

@@ -15,5 +15,6 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 description = "AoC 2023 solutions"
-repository = "https://github.com/Daanoz/AOC2023"
+repository = "github.com/Daanoz/AOC2023"
 homepage = "https://github.com/Daanoz/AOC2023"
+authors = ["github.com/Daanoz"]

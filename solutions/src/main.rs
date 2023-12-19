@@ -1,4 +1,5 @@
 use aoc2023::get_input;
+use chrono::{ TimeZone, Datelike, Local};
 use clap::ArgAction;
 use clap::Parser;
 use std::ops::Add;
@@ -25,16 +26,38 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
+
+
+    std::env::vars().for_each(|(key, value)| {
+        println!("{}: {}", key, value);
+    });
+
     let args = Args::parse();
     if args.day.is_none() && !args.all {
         panic!("Either select a day with --day <DAY> or run all with --all");
     }
+    let now = Local::now();
+    let max_day = if now.year() == 2023 && now.month() == 12 {
+        now.day() as u8
+    } else if now.lt(&Local.with_ymd_and_hms(2023, 12, 1, 0, 0, 0).earliest().unwrap()) {
+        0
+    } else {
+        25
+    };
+
     if let Some(day) = args.day {
+        if day > max_day {
+            panic!("Day {} is not yet available", day);
+        }
         execute_day(day, args.aoc_session.clone()).await;
     } else {
         let mut total_duration = Duration::ZERO;
         for day in 1..=25 {
-            total_duration = total_duration.add(execute_day(day, args.aoc_session.clone()).await);
+            if day <= max_day {
+                total_duration = total_duration.add(execute_day(day, args.aoc_session.clone()).await);
+            } else {
+                println!("Day {} skipped", day);
+            }
         }
         println!("Total time: {:.2?}", total_duration);
     }
