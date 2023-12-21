@@ -111,9 +111,9 @@ impl FromStr for Workflow {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (name, rules) = s.split_once("{").unwrap();
-        let rules = rules.strip_suffix("}").unwrap();
-        let rules = rules.split(",").map(|r| r.parse().unwrap()).collect();
+        let (name, rules) = s.split_once('{').unwrap();
+        let rules = rules.strip_suffix('}').unwrap();
+        let rules = rules.split(',').map(|r| r.parse().unwrap()).collect();
 
         Ok(Workflow {
             name: String::from(name),
@@ -192,7 +192,7 @@ impl FromStr for RuleType {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts = s.split_once(":");
+        let parts = s.split_once(':');
         if parts.is_none() {
             return Ok(Self::Direct(s.parse().unwrap()));
         }
@@ -258,8 +258,8 @@ impl FromStr for Part {
         let mut m = 0;
         let mut a = 0;
         let mut s = 0;
-        for part in str[1..str.len() - 1].split(",") {
-            let (key, value) = part.split_once("=").unwrap();
+        for part in str[1..str.len() - 1].split(',') {
+            let (key, value) = part.split_once('=').unwrap();
             let value: u32 = value.parse().unwrap();
             match key {
                 "x" => x = value,

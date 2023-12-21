@@ -217,10 +217,9 @@ impl PuzzleVisualizer {
         if let Some(result_count) = visualization_data.result.result_count {
             ui.horizontal(|ui| {
                 ui.label("Select result: ");
-                ui.add(egui::Slider::from_get_set(
-                    1.0..=result_count as f64,
-                    |val| {
-                        if let Some(val) = val  {
+                ui.add(
+                    egui::Slider::from_get_set(1.0..=result_count as f64, |val| {
+                        if let Some(val) = val {
                             let val = val - 1.0;
                             if self.visualization_index != val as usize {
                                 self.visualization_index = val as usize;
@@ -228,8 +227,10 @@ impl PuzzleVisualizer {
                             }
                         }
                         self.visualization_index as f64
-                    },
-                ).step_by(1.0).fixed_decimals(0));
+                    })
+                    .step_by(1.0)
+                    .fixed_decimals(0),
+                );
                 if ui.button("-").clicked() {
                     if self.visualization_index > 0 {
                         self.visualization_index = self.visualization_index - 1;

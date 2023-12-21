@@ -1,7 +1,4 @@
-use std::{
-    num::ParseIntError,
-    str::FromStr,
-};
+use std::{num::ParseIntError, str::FromStr};
 
 use super::Solution;
 use common::Answer;
@@ -70,14 +67,14 @@ fn dig(plans: Vec<DigPlan>) -> DigBorder {
 // Shoelace formula
 fn dig_area(dig_border: &DigBorder) -> usize {
     let mut border_length = 0;
-    let (s1, s2) = dig_border.windows(2).fold((0_isize, 0_isize), |(s1, s2), edges| {
-        border_length += ((edges[0].0 - edges[1].0).abs() + (edges[0].1 - edges[1].1).abs()).abs();
-        let (c1, c2) = (edges[0], edges[1]);
-        (
-            s1 + c1.0 * c2.1,
-            s2 + c1.1 * c2.0,
-        )
-    });
+    let (s1, s2) = dig_border
+        .windows(2)
+        .fold((0_isize, 0_isize), |(s1, s2), edges| {
+            border_length +=
+                ((edges[0].0 - edges[1].0).abs() + (edges[0].1 - edges[1].1).abs()).abs();
+            let (c1, c2) = (edges[0], edges[1]);
+            (s1 + c1.0 * c2.1, s2 + c1.1 * c2.0)
+        });
     let area = ((s1 - s2).abs() + border_length) / 2;
     (area + 1) as usize
 }
@@ -100,7 +97,7 @@ impl DigPlan {
                 '1' => Direction::Down,
                 '2' => Direction::Left,
                 '3' => Direction::Up,
-                _=> panic!("Unknown direction: {}", dir),
+                _ => panic!("Unknown direction: {}", dir),
             },
             distance,
             ..self
@@ -120,7 +117,7 @@ impl FromStr for DigPlan {
             .ok_or("No color")?
             .strip_prefix("(#")
             .ok_or("No color prefix")?
-            .strip_suffix(")")
+            .strip_suffix(')')
             .ok_or("No color suffix")?;
 
         Ok(Self {
@@ -194,7 +191,10 @@ U 2 (#7a21e3)";
 }
 
 #[cfg(feature = "ui")]
-fn build_shapes_for_ui(input: String, request: ui_support::DisplayRequest) -> ui_support::DisplayResult {
+fn build_shapes_for_ui(
+    input: String,
+    request: ui_support::DisplayRequest,
+) -> ui_support::DisplayResult {
     use egui::epaint::{Color32, Shape, Stroke};
 
     let mut plans = parse_input(&input);
@@ -204,9 +204,11 @@ fn build_shapes_for_ui(input: String, request: ui_support::DisplayRequest) -> ui
         scale = 0.0001; // scale down to avoid rendering issues
     }
     let dig = dig(plans);
-    let ranges = dig.iter().fold((0, 0, 0, 0), |(min_x, min_y, max_x, max_y), (x, y)| {
-        (min_x.min(*x), min_y.min(*y), max_x.max(*x), max_y.max(*y))
-    });
+    let ranges = dig
+        .iter()
+        .fold((0, 0, 0, 0), |(min_x, min_y, max_x, max_y), (x, y)| {
+            (min_x.min(*x), min_y.min(*y), max_x.max(*x), max_y.max(*y))
+        });
     let offset: (f32, f32) = (ranges.0 as f32 - 0.5, ranges.1 as f32 - 0.5);
     let largest_range = (ranges.2 - ranges.0).max(ranges.3 - ranges.1) as f32 * scale;
     let stroke_width = largest_range / 1000.0;
@@ -227,7 +229,8 @@ fn build_shapes_for_ui(input: String, request: ui_support::DisplayRequest) -> ui
                     ),
                 ],
                 stroke: Stroke::new(stroke_width, Color32::RED),
-            }.into()
+            }
+            .into()
         })
         .collect::<Vec<ui_support::DisplayData>>();
     let mut result: ui_support::DisplayResult = shapes.into();

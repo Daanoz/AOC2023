@@ -37,28 +37,30 @@ impl Solution for Puzzle {
         let rx_collector_name = rx_collector.borrow().name.clone();
 
         // Inject recorders where the first level Conjunction resides
-        let rx_recorders = modules.values().filter(|m| {
-            m.borrow().str_outputs.contains(&rx_collector_name)
-        }).map(|i| {
-            let recorder_name = format!("rec_{}", i.borrow().name);
-            let recorder = Rc::new(RefCell::new(Module {
-                name: recorder_name.clone(),
-                module_type: ModuleType::Recorder { seen_high: false, seen_low: false },
-                outputs: vec![],
-                str_outputs: vec![],
-            }));
-            i.borrow_mut().outputs.push(recorder.clone());
-            i.borrow_mut().str_outputs.push(recorder_name);
-            recorder
-        }).collect::<Vec<_>>();
+        let rx_recorders = modules
+            .values()
+            .filter(|m| m.borrow().str_outputs.contains(&rx_collector_name))
+            .map(|i| {
+                let recorder_name = format!("rec_{}", i.borrow().name);
+                let recorder = Rc::new(RefCell::new(Module {
+                    name: recorder_name.clone(),
+                    module_type: ModuleType::Recorder {
+                        seen_high: false,
+                        seen_low: false,
+                    },
+                    outputs: vec![],
+                    str_outputs: vec![],
+                }));
+                i.borrow_mut().outputs.push(recorder.clone());
+                i.borrow_mut().str_outputs.push(recorder_name);
+                recorder
+            })
+            .collect::<Vec<_>>();
 
         let mut c: usize = 0;
-        let mut cycles: HashMap<String, usize> = HashMap::from_iter(
-            rx_recorders
-                .iter()
-                .map(|i| (i.borrow().name.clone(), 0)),
-        );
-        
+        let mut cycles: HashMap<String, usize> =
+            HashMap::from_iter(rx_recorders.iter().map(|i| (i.borrow().name.clone(), 0)));
+
         while rx.borrow().module_type != ModuleType::Output(Some(false)) {
             run_pulse(&modules);
             c += 1;
@@ -67,24 +69,23 @@ impl Solution for Puzzle {
                 for rx_recorder in &rx_recorders {
                     let rx_recorder = rx_recorder.borrow();
                     if let ModuleType::Recorder { seen_high, .. } = &rx_recorder.module_type {
-                        if *seen_high {
-                            if cycles.get(&rx_recorder.name).unwrap() == &0 {
-                                cycles.insert(rx_recorder.name.clone(), c);
-                            }
+                        if *seen_high && cycles.get(&rx_recorder.name).unwrap() == &0 {
+                            cycles.insert(rx_recorder.name.clone(), c);
                         }
                     }
                 }
             }
 
             // Reset recorders every cycle
-            rx_recorders
-                .iter()
-                .for_each(|i| {
-                    let mut recorder = i.borrow_mut();
-                    if let ModuleType::Recorder{ .. } = recorder.module_type {
-                        recorder.module_type = ModuleType::Recorder { seen_high: false, seen_low: false };
-                    }
-                });
+            rx_recorders.iter().for_each(|i| {
+                let mut recorder = i.borrow_mut();
+                if let ModuleType::Recorder { .. } = recorder.module_type {
+                    recorder.module_type = ModuleType::Recorder {
+                        seen_high: false,
+                        seen_low: false,
+                    };
+                }
+            });
 
             // Found all cycles
             if cycles.values().all(|v| *v != 0) {
@@ -151,7 +152,7 @@ fn parse_input(input: String) -> ModuleMap {
         (name, module)
     }));
     module_map.iter().for_each(|(_, module)| {
-        Module::update_inputs(&module, &ref_module_map);
+        Module::update_inputs(module, &ref_module_map);
     });
     module_map
 }
@@ -187,7 +188,7 @@ impl Module {
             .collect::<Vec<_>>();
         new_outputs
     }
-    pub fn update_inputs(self_ref: &ModuleRef, map: &ModuleMap) -> () {
+    pub fn update_inputs(self_ref: &ModuleRef, map: &ModuleMap) {
         let mod_name = self_ref.borrow().name.clone();
         let filtered_map = map
             .iter()
@@ -219,22 +220,22 @@ impl Module {
                 Some(*state)
             }
             ModuleType::Conjunction(ref mut states) => {
-                let keys = states.keys().map(|k| k.clone()).collect::<Vec<_>>();
-                *states.get_mut(&src.borrow().name).expect(&format!(
-                    "Mod not found: {}, contained: {:?}",
-                    src.borrow().name,
-                    keys
-                )) = high;
+                *states
+                    .get_mut(&src.borrow().name)
+                    .unwrap_or_else(|| panic!("Mod not found: {}", src.borrow().name)) = high;
                 Some(!states.values().all(|f| *f))
-            },
-            ModuleType::Recorder { ref mut seen_high, ref mut seen_low } => {
+            }
+            ModuleType::Recorder {
+                ref mut seen_high,
+                ref mut seen_low,
+            } => {
                 if high {
                     *seen_high = true;
                 } else {
                     *seen_low = true;
                 }
                 None
-            },
+            }
         }
     }
 }
@@ -262,7 +263,7 @@ impl FromStr for Module {
             }),
             "&" => Ok(Module {
                 name: mod_name.to_string(),
-                module_type: ModuleType::Conjunction(Box::new(HashMap::new())),
+                module_type: ModuleType::Conjunction(HashMap::default()),
                 outputs: vec![],
                 str_outputs,
             }),
@@ -280,8 +281,8 @@ impl FromStr for Module {
 enum ModuleType {
     Broadcaster,
     FlipFlop(bool),
-    Conjunction(Box<HashMap<String, bool>>),
-    Recorder{ seen_high: bool, seen_low: bool },
+    Conjunction(HashMap<String, bool>),
+    Recorder { seen_high: bool, seen_low: bool },
     Output(Option<bool>),
 }
 

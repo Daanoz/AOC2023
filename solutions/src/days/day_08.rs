@@ -98,7 +98,7 @@ fn calculate_smart_ghost_steps(
 
 /// Calculate the least common multiple of two numbers.
 /// Based of https://en.wikipedia.org/wiki/Least_common_multiple#Using_the_greatest_common_divisor
-fn get_lcm((left, right): (usize, usize)) -> usize {
+pub fn get_lcm((left, right): (usize, usize)) -> usize {
     let gcd = get_gcd((left, right));
     left * right / gcd
 }

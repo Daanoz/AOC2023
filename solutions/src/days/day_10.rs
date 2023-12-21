@@ -346,72 +346,96 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
             no_path_color
         };
         vec![match cell {
-            Cell::Start => Some(Shape::Circle(CircleShape {
-                center: pos,
-                radius: 0.5,
-                fill: Color32::from_rgb(0, 255, 0),
-                stroke: Stroke::new(0.1, Color32::from_rgb(0, 0, 0)),
-            }).into()),
-            Cell::Horizontal => Some(Shape::LineSegment {
-                points: [
-                    egui::Pos2::new(pos.x - 0.5, pos.y),
-                    egui::Pos2::new(pos.x + 0.5, pos.y),
-                ],
-                stroke: Stroke::new(0.1, stroke_color),
-            }.into()),
-            Cell::Vertical => Some(Shape::LineSegment {
-                points: [
-                    egui::Pos2::new(pos.x, pos.y - 0.5),
-                    egui::Pos2::new(pos.x, pos.y + 0.5),
-                ],
-                stroke: Stroke::new(0.1, stroke_color),
-            }.into()),
-            Cell::BendNE => Some(Shape::Path(PathShape {
-                points: vec![
-                    egui::Pos2::new(pos.x, pos.y - 0.5),
-                    egui::Pos2::new(pos.x, pos.y),
-                    egui::Pos2::new(pos.x + 0.5, pos.y),
-                ],
-                closed: false,
-                fill: Color32::TRANSPARENT,
-                stroke: Stroke::new(0.1, stroke_color),
-            }).into()),
-            Cell::BendNW => Some(Shape::Path(PathShape {
-                points: vec![
-                    egui::Pos2::new(pos.x, pos.y - 0.5),
-                    egui::Pos2::new(pos.x, pos.y),
-                    egui::Pos2::new(pos.x - 0.5, pos.y),
-                ],
-                closed: false,
-                fill: Color32::TRANSPARENT,
-                stroke: Stroke::new(0.1, stroke_color),
-            }).into()),
-            Cell::BendSE => Some(Shape::Path(PathShape {
-                points: vec![
-                    egui::Pos2::new(pos.x, pos.y + 0.5),
-                    egui::Pos2::new(pos.x, pos.y),
-                    egui::Pos2::new(pos.x + 0.5, pos.y),
-                ],
-                closed: false,
-                fill: Color32::TRANSPARENT,
-                stroke: Stroke::new(0.1, stroke_color),
-            }).into()),
-            Cell::BendSW => Some(Shape::Path(PathShape {
-                points: vec![
-                    egui::Pos2::new(pos.x, pos.y + 0.5),
-                    egui::Pos2::new(pos.x, pos.y),
-                    egui::Pos2::new(pos.x - 0.5, pos.y),
-                ],
-                closed: false,
-                fill: Color32::TRANSPARENT,
-                stroke: Stroke::new(0.1, stroke_color),
-            }).into()),
-            Cell::Ground => Some(Shape::Circle(CircleShape {
-                center: pos,
-                radius: 0.5,
-                fill: stroke_color,
-                stroke: Stroke::new(0.1, Color32::from_rgb(0, 0, 0)),
-            }).into()),
+            Cell::Start => Some(
+                Shape::Circle(CircleShape {
+                    center: pos,
+                    radius: 0.5,
+                    fill: Color32::from_rgb(0, 255, 0),
+                    stroke: Stroke::new(0.1, Color32::from_rgb(0, 0, 0)),
+                })
+                .into(),
+            ),
+            Cell::Horizontal => Some(
+                Shape::LineSegment {
+                    points: [
+                        egui::Pos2::new(pos.x - 0.5, pos.y),
+                        egui::Pos2::new(pos.x + 0.5, pos.y),
+                    ],
+                    stroke: Stroke::new(0.1, stroke_color),
+                }
+                .into(),
+            ),
+            Cell::Vertical => Some(
+                Shape::LineSegment {
+                    points: [
+                        egui::Pos2::new(pos.x, pos.y - 0.5),
+                        egui::Pos2::new(pos.x, pos.y + 0.5),
+                    ],
+                    stroke: Stroke::new(0.1, stroke_color),
+                }
+                .into(),
+            ),
+            Cell::BendNE => Some(
+                Shape::Path(PathShape {
+                    points: vec![
+                        egui::Pos2::new(pos.x, pos.y - 0.5),
+                        egui::Pos2::new(pos.x, pos.y),
+                        egui::Pos2::new(pos.x + 0.5, pos.y),
+                    ],
+                    closed: false,
+                    fill: Color32::TRANSPARENT,
+                    stroke: Stroke::new(0.1, stroke_color),
+                })
+                .into(),
+            ),
+            Cell::BendNW => Some(
+                Shape::Path(PathShape {
+                    points: vec![
+                        egui::Pos2::new(pos.x, pos.y - 0.5),
+                        egui::Pos2::new(pos.x, pos.y),
+                        egui::Pos2::new(pos.x - 0.5, pos.y),
+                    ],
+                    closed: false,
+                    fill: Color32::TRANSPARENT,
+                    stroke: Stroke::new(0.1, stroke_color),
+                })
+                .into(),
+            ),
+            Cell::BendSE => Some(
+                Shape::Path(PathShape {
+                    points: vec![
+                        egui::Pos2::new(pos.x, pos.y + 0.5),
+                        egui::Pos2::new(pos.x, pos.y),
+                        egui::Pos2::new(pos.x + 0.5, pos.y),
+                    ],
+                    closed: false,
+                    fill: Color32::TRANSPARENT,
+                    stroke: Stroke::new(0.1, stroke_color),
+                })
+                .into(),
+            ),
+            Cell::BendSW => Some(
+                Shape::Path(PathShape {
+                    points: vec![
+                        egui::Pos2::new(pos.x, pos.y + 0.5),
+                        egui::Pos2::new(pos.x, pos.y),
+                        egui::Pos2::new(pos.x - 0.5, pos.y),
+                    ],
+                    closed: false,
+                    fill: Color32::TRANSPARENT,
+                    stroke: Stroke::new(0.1, stroke_color),
+                })
+                .into(),
+            ),
+            Cell::Ground => Some(
+                Shape::Circle(CircleShape {
+                    center: pos,
+                    radius: 0.5,
+                    fill: stroke_color,
+                    stroke: Stroke::new(0.1, Color32::from_rgb(0, 0, 0)),
+                })
+                .into(),
+            ),
         }]
     })
 
@@ -421,7 +445,7 @@ fn build_shapes_for_ui(input: String) -> Vec<ui_support::DisplayData> {
     //         row.into_iter()
     //             .enumerate()
     //             .flat_map(|(x, cell)| {
-                   
+
     //             })
     //             .collect::<Vec<Shape>>()
     //     })
