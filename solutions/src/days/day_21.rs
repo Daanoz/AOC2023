@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use super::Solution;
 use common::Answer;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 pub struct Puzzle {
     steps_a: usize,
@@ -45,12 +46,10 @@ impl Solution for Puzzle {
         let size = grid.len();
         let total_width = (self.steps_b / size) - 1;
 
-        // round up
+        // Determine number of full grids
         let even_grids = ((total_width + 1) / 2 * 2).pow(2);
-        steps = run_steps(&grid, steps, size * 2);
+        steps = run_steps_until_corner(&grid, steps, size * 2);
         let points_per_even_grid = steps.len();
-
-        // round down
         let odd_grids = (total_width / 2 * 2 + 1).pow(2);
         steps = make_step(&grid, &steps);
         let points_per_odd_grid = steps.len();
@@ -58,29 +57,35 @@ impl Solution for Puzzle {
         let mut full_grid_steps =
             even_grids * points_per_even_grid + odd_grids * points_per_odd_grid;
 
+        let start = 0;
+        let center = size / 2;
+        let end = size - 1;
+
         // straight edges
         let no_steps = size - 1;
-        let right_steps = run_steps(&grid, HashSet::from([(0, size / 2)]), no_steps).len();
-        let left_steps = run_steps(&grid, HashSet::from([(size - 1, size / 2)]), no_steps).len();
-        let top_steps = run_steps(&grid, HashSet::from([(size / 2, size - 1)]), no_steps).len();
-        let bottom_steps = run_steps(&grid, HashSet::from([(size / 2, 0)]), no_steps).len();
-        full_grid_steps += right_steps + left_steps + top_steps + bottom_steps;
+        full_grid_steps += [
+            (start, center),
+            (end, center),
+            (center, end),
+            (center, start),
+        ]
+        .into_par_iter()
+        .map(|start| run_steps(&grid, HashSet::from([start]), no_steps).len())
+        .sum::<usize>();
 
         // all diagonal corners
         let diagonal_count = total_width + 1;
-        let no_steps = size / 2 - 1;
-        let str_steps = run_steps(&grid, HashSet::from([(0, size - 1)]), no_steps);
-        let sbr_steps = run_steps(&grid, HashSet::from([(0, 0)]), no_steps);
-        let sbl_steps = run_steps(&grid, HashSet::from([(size - 1, 0)]), no_steps);
-        let stl_steps = run_steps(&grid, HashSet::from([(size - 1, size - 1)]), no_steps);
-        full_grid_steps += (str_steps.len() + sbr_steps.len() + sbl_steps.len() + stl_steps.len()) * diagonal_count;
-        // other diagonal corners, continue from previous
-        let no_steps = ((size * 3) / 2 - 1) - no_steps;
-        let ltr_steps = run_steps(&grid, str_steps, no_steps).len();
-        let lbr_steps = run_steps(&grid, sbr_steps, no_steps).len();
-        let lbl_steps = run_steps(&grid, sbl_steps, no_steps).len();
-        let ltl_steps = run_steps(&grid, stl_steps, no_steps).len();
-        full_grid_steps += (ltr_steps + lbr_steps + lbl_steps + ltl_steps) * total_width;
+        let no_steps_small = size / 2 - 1;
+        let no_steps_large = ((size * 3) / 2 - 1) - no_steps_small;
+        full_grid_steps += [(start, end), (start, start), (end, start), (end, end)]
+            .into_par_iter()
+            .map(|start| {
+                let small_diagonal_steps = run_steps(&grid, HashSet::from([start]), no_steps_small);
+                let small_diagonal_step_count = small_diagonal_steps.len();
+                let large_steps = run_steps(&grid, small_diagonal_steps, no_steps_large).len();
+                diagonal_count * small_diagonal_step_count + large_steps * total_width
+            })
+            .sum::<usize>();
 
         Answer::from(full_grid_steps).into()
     }
@@ -114,6 +119,17 @@ fn parse_input(input: String) -> (Grid, HashSet<Coord>) {
         })
         .collect::<Vec<_>>();
     (grid, steps)
+}
+
+/// Not sure if this works on every input, but it saves ~100ms
+fn run_steps_until_corner(grid: &Grid, mut steps: HashSet<Coord>, n: usize) -> HashSet<Coord> {
+    for _ in 0..n {
+        steps = make_step(grid, &steps);
+        if steps.contains(&(0, 0)) {
+            break;
+        }
+    }
+    steps
 }
 
 fn run_steps(grid: &Grid, mut steps: HashSet<Coord>, n: usize) -> HashSet<Coord> {
