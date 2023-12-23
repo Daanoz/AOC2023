@@ -1,9 +1,8 @@
-use std::{
-    cell::RefCell,
-    collections::{HashMap, VecDeque},
-    rc::Rc,
-    str::FromStr,
-};
+#[cfg(feature = "performance")]
+use ahash::AHashMap as HashMap;
+#[cfg(not(feature = "performance"))]
+use std::collections::HashMap;
+use std::{cell::RefCell, collections::VecDeque, rc::Rc, str::FromStr};
 
 use super::Solution;
 use common::Answer;

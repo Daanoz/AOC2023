@@ -1,7 +1,8 @@
-use std::{
-    cmp::Ordering,
-    collections::{BinaryHeap, HashMap},
-};
+#[cfg(feature = "performance")]
+use ahash::AHashMap as HashMap;
+#[cfg(not(feature = "performance"))]
+use std::collections::HashMap;
+use std::{cmp::Ordering, collections::BinaryHeap};
 
 use super::Solution;
 use common::Answer;

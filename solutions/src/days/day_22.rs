@@ -1,11 +1,15 @@
+#[cfg(feature = "performance")]
+use ahash::{AHashMap as HashMap, AHashSet as HashSet};
 use std::{
     cell::RefCell,
-    collections::{HashMap, HashSet, VecDeque},
+    collections::VecDeque,
     fmt::{Debug, Display},
     ops::RangeInclusive,
     rc::Rc,
     str::FromStr,
 };
+#[cfg(not(feature = "performance"))]
+use std::{collections::HashMap, collections::HashSet};
 
 use super::Solution;
 use common::Answer;
@@ -196,7 +200,11 @@ fn count_drops(brick: &BlockRef) -> usize {
     while !queue.is_empty() {
         let current = queue.pop_front().unwrap();
         for top in &current.borrow().supporting {
-            let is_falling = top.borrow().supported_by.iter().all(|s| falling.contains(&(s.as_ptr() as usize)));
+            let is_falling = top
+                .borrow()
+                .supported_by
+                .iter()
+                .all(|s| falling.contains(&(s.as_ptr() as usize)));
             if is_falling {
                 falling.insert(top.as_ptr() as usize);
                 queue.push_back(top.clone());

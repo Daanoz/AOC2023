@@ -1,4 +1,8 @@
-use std::{collections::HashMap, ops::RangeInclusive, str::FromStr};
+#[cfg(feature = "performance")]
+use ahash::AHashMap as HashMap;
+#[cfg(not(feature = "performance"))]
+use std::collections::HashMap;
+use std::{ops::RangeInclusive, str::FromStr};
 
 use super::Solution;
 use common::Answer;

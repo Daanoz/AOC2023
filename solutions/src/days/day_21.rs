@@ -1,3 +1,6 @@
+#[cfg(feature = "performance")]
+use ahash::AHashSet as HashSet;
+#[cfg(not(feature = "performance"))]
 use std::collections::HashSet;
 
 use super::Solution;
