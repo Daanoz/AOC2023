@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     fmt::{Debug, Display},
     ops::RangeInclusive,
     rc::Rc,
@@ -48,9 +48,7 @@ impl Solution for Puzzle {
                 if b.borrow().supporting.is_empty() {
                     return 0;
                 }
-                let mut disintegrated = HashSet::from([b.as_ptr() as usize]);
-                b.borrow().count_drops(&mut disintegrated);
-                disintegrated.len() - 1
+                count_drops(&b)
             })
             .sum();
         Answer::from(result).into()
@@ -192,6 +190,22 @@ fn set_supporting(bricks: &mut BrickList, z_map: &mut ZMap) {
     }
 }
 
+fn count_drops(brick: &BlockRef) -> usize {
+    let mut queue = VecDeque::from([brick.clone()]);
+    let mut falling: HashSet<_> = HashSet::from([brick.as_ptr() as usize]);
+    while !queue.is_empty() {
+        let current = queue.pop_front().unwrap();
+        for top in &current.borrow().supporting {
+            let is_falling = top.borrow().supported_by.iter().all(|s| falling.contains(&(s.as_ptr() as usize)));
+            if is_falling {
+                falling.insert(top.as_ptr() as usize);
+                queue.push_back(top.clone());
+            }
+        }
+    }
+    falling.len() - 1
+}
+
 fn range_intersect(a: &RangeInclusive<usize>, b: &RangeInclusive<usize>) -> bool {
     if a.end() < b.start() || a.start() > b.end() {
         false
@@ -265,23 +279,6 @@ impl Brick {
     }
     fn set_supporting(&mut self, supports: Vec<BlockRef>) {
         self.supporting = supports;
-    }
-    fn count_drops(&self, disintegrated: &mut HashSet<usize>) {
-        let falling: Vec<&BlockRef> = self
-            .supporting
-            .iter()
-            .filter(|supported| {
-                !supported
-                    .borrow()
-                    .supported_by
-                    .iter()
-                    .any(|f| !disintegrated.contains(&(f.as_ptr() as usize)))
-            })
-            .collect();
-        disintegrated.extend(falling.iter().map(|f| f.as_ptr() as usize));
-        for falling_block in falling {
-            falling_block.borrow().count_drops(disintegrated);
-        }
     }
 }
 
